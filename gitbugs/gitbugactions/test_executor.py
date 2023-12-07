@@ -12,11 +12,13 @@ class TestExecutor:
         language: str,
         act_cache_dir: str,
         default_actions: GitHubActions,
-        runner: str = "gitbugactions:latest",
+        base_image: str,
+        runner_image: str,
     ):
         self.act_cache_dir = act_cache_dir
         self.repo_clone = repo_clone
-        self.runner = runner
+        self.base_image = base_image
+        self.runner_image = runner_image
         self.language = language
         # Note: these default actions may have different configuration options such as paths, runners, etc.
         self.default_actions = default_actions
@@ -28,17 +30,15 @@ class TestExecutor:
         act_runs: List[ActTestsRun] = []
         default_actions = False
 
-        print("initializing github actions")
-
         test_actions = GitHubActions(
             self.repo_clone.workdir,
             self.language,
             keep_containers=keep_containers,
-            runner=self.runner,
+            base_image=self.base_image,
+            runner_image=self.runner_image,
             offline=offline,
         )
 
-        print("done initializing github actions")
         if len(test_actions.test_workflows) == 0 and self.default_actions is not None:
             default_actions = True
             for workflow in self.default_actions.test_workflows:
@@ -56,7 +56,6 @@ class TestExecutor:
         test_actions.save_workflows()
 
         for workflow in test_actions.test_workflows:
-            print("running workflow")
             act_runs.append(test_actions.run_workflow(workflow, self.act_cache_dir))
 
         test_actions.delete_workflows()

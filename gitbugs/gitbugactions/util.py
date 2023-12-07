@@ -8,9 +8,9 @@ import pygit2
 import subprocess
 from unidiff import PatchSet
 from typing import Optional, List
-from gitbugs.gitbugactions.actions.actions import GitHubActions
-from gitbugs.gitbugactions.actions.actions import ActCacheDirManager
-from gitbugs.gitbugactions.test_executor import TestExecutor
+from gitbugactions.actions.actions import GitHubActions
+from gitbugactions.actions.actions import ActCacheDirManager
+from gitbugactions.test_executor import TestExecutor
 from junitparser.junitparser import JUnitXmlError
 from enum import Enum
 

@@ -117,30 +117,46 @@ class Bug(object):
             bug = Bug(bug_info)
 
         repo = pygit2.Repository(Path(workdir, ".git"))
+        docker_client = docker.from_env()
 
+        # Run Actions
         act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
-            image_name = f"nunosaavedra/gitbugs-java:{bug.bid}"
-            print(image_name)
+            base_image = f"nunosaavedra/gitbugs-java:{bug.bid}"
+            runner_image = f"gitbugs-java:{str(uuid.uuid4())}"
             executor = TestExecutor(
-                repo,
-                bug.language,
-                act_cache_dir,
-                None,
-                runner=image_name,
+                repo_clone=repo,
+                language=bug.language,
+                act_cache_dir=act_cache_dir,
+                default_actions=None,
+                base_image=base_image,
+                runner_image=runner_image,
             )
             runs = executor.run_tests(keep_containers=False, offline=True)
+            docker_client.images.remove(runner_image, force=True)
         finally:
             ActCacheDirManager.return_act_cache_dir(act_cache_dir)
 
-        # Process runs
+        # Check if the run was successful
         def flat_failed_tests(runs):
             return sum(map(lambda act_run: act_run.failed_tests, runs), [])
 
+        def number_of_tests(runs):
+            return sum(map(lambda act_run: len(act_run.tests), runs))
+
         failed_tests = flat_failed_tests(runs)
+
+        # TODO: print a nice report, save the logs to files, etc.
         print(failed_tests)
 
-        return len(failed_tests) == 0
+        for run in runs:
+            print(run.stdout)
+
+        return (
+            len(runs) > 0
+            and len(failed_tests) == 0
+            and number_of_tests(runs) == bug.number_of_tests
+        )
 
     def __str__(self) -> str:
         return self.bid

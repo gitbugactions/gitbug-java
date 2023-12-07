@@ -1,6 +1,4 @@
 import os, tempfile, shutil, traceback
-import re, tarfile
-import hashlib
 import grp
 import uuid
 import time
@@ -8,6 +6,7 @@ import docker
 import logging
 import subprocess
 import threading
+from pathlib import Path
 
 from typing import List, Dict, Set
 from junitparser import TestCase, Error
@@ -197,16 +196,17 @@ class Act:
 
     def __init__(
         self,
-        reuse: bool = False,
+        base_image: str,
+        runner_image: str,
         timeout=5,
-        runner: str = "gitbugactions:latest",
+        reuse: bool = False,
         offline: bool = False,
     ):
         """
         Args:
             timeout (int): Timeout in minutes
         """
-        Act.__setup_act(runner=runner)
+        Act.__setup_act(base_image=base_image, runner_image=runner_image)
         if reuse:
             self.flags = "--reuse"
         else:
@@ -218,11 +218,11 @@ class Act:
         self.flags += f" --memory={Act.__MEMORY_LIMIT}"
         self.flags += "'"
 
-        self.__DEFAULT_RUNNERS = f"-P ubuntu-latest={runner}"
+        self.__DEFAULT_RUNNERS = f"-P ubuntu-latest={runner_image}"
         self.timeout = timeout
 
     @staticmethod
-    def __setup_act(runner: str):
+    def __setup_act(base_image: str, runner_image: str):
         with Act.__SETUP_LOCK:
             if Act.__ACT_SETUP:
                 return
@@ -234,22 +234,30 @@ class Act:
                 logging.error("Act is not correctly installed")
                 exit(-1)
 
-            # Checks that runner image exists
+            # Checks that base image exists
             client = docker.from_env()
-            if len(client.images.list(name=runner)) != 1:
-                logging.error(f"Runner image {runner} does not exist")
+            if len(client.images.list(name=base_image)) != 1:
+                logging.error(f"Base image {base_image} does not exist")
                 exit(-1)
 
-            # with open("Dockerfile", "w") as f:
-            #     client = docker.from_env()
-            #     dockerfile = "FROM catthehacker/ubuntu:full-latest\n"
-            #     dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
-            #     dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
-            #     dockerfile += f"RUN sudo usermod -u {os.getuid()} runner\n"
-            #     f.write(dockerfile)
+            # Removes runner image if exists
+            if len(client.images.list(name=runner_image)) > 0:
+                client.images.remove(image=runner_image, force=True)
 
-            # client.images.build(path="./", tag="gitbugactions", forcerm=True)
-            # os.remove("Dockerfile")
+            # Write a Dockerfile to a temporary directory and build the runner image
+            tmp_dir = tempfile.mkdtemp()
+            Path(tmp_dir).mkdir(parents=True, exist_ok=True)
+            dockerfile_path = Path(tmp_dir, "Dockerfile")
+            with dockerfile_path.open("w") as f:
+                client = docker.from_env()
+                dockerfile = f"FROM {base_image}\n"
+                dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
+                dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
+                dockerfile += f"RUN sudo usermod -u {os.getuid()} runner\n"
+                f.write(dockerfile)
+
+            client.images.build(path=tmp_dir, tag=runner_image, forcerm=True)
+            shutil.rmtree(tmp_dir, ignore_errors=True)
             Act.__ACT_SETUP = True
 
     @staticmethod
@@ -328,8 +336,9 @@ class GitHubActions:
         self,
         repo_path,
         language: str,
+        base_image: str,
+        runner_image: str,
         keep_containers: bool = False,
-        runner: str = "gitbugactions:latest",
         offline: bool = False,
     ):
         self.repo_path = repo_path
@@ -337,7 +346,8 @@ class GitHubActions:
         self.language: str = language.strip().lower()
         self.workflows: List[GitHubWorkflow] = []
         self.test_workflows: List[GitHubWorkflow] = []
-        self.runner = runner
+        self.base_image = base_image
+        self.runner_image = runner_image
         self.offline = offline
 
         workflows_path = os.path.join(repo_path, ".github", "workflows")
@@ -405,7 +415,11 @@ class GitHubActions:
 
     def run_workflow(self, workflow, act_cache_dir: str) -> ActTestsRun:
         act = Act(
-            self.keep_containers, timeout=10, runner=self.runner, offline=self.offline
+            base_image=self.base_image,
+            runner_image=self.runner_image,
+            timeout=10,
+            reuse=self.keep_containers,
+            offline=self.offline,
         )
         return act.run_act(self.repo_path, workflow, act_cache_dir=act_cache_dir)
 
