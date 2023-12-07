@@ -93,7 +93,9 @@ class Bug(object):
             bug_info["fixed"] = fixed
             json.dump(bug_info, f)
 
-    def __get_default_actions(self, diff_folder_path, repo_clone, language) -> GitHubActions:
+    def __get_default_actions(
+        self, diff_folder_path, repo_clone, language, runner_image: str
+    ) -> GitHubActions:
         workflow_dir_path = os.path.join(diff_folder_path, "workflow")
         workflow_name = os.listdir(workflow_dir_path)[0]
         workflow_path = os.path.join(workflow_dir_path, workflow_name)
@@ -101,12 +103,16 @@ class Bug(object):
         github_actions_path = os.path.join(repo_clone.workdir, ".github", "workflows")
         if not os.path.exists(github_actions_path):
             os.makedirs(github_actions_path)
-        new_workflow_path = os.path.join(github_actions_path, str(uuid.uuid4()) + ".yml")
+        new_workflow_path = os.path.join(
+            github_actions_path, str(uuid.uuid4()) + ".yml"
+        )
         shutil.copyfile(workflow_path, new_workflow_path)
 
         workflows = [GitHubWorkflowFactory.create_workflow(new_workflow_path, language)]
 
-        default_actions = GitHubActions(repo_clone.workdir, language)
+        default_actions = GitHubActions(
+            repo_clone.workdir, language, runner_image=runner_image
+        )
         default_actions.test_workflows = workflows
 
         return default_actions
@@ -143,7 +149,9 @@ class Bug(object):
                 repo_clone=repo,
                 language=bug.language,
                 act_cache_dir=act_cache_dir,
-                default_actions=self.__get_default_actions(diff_folder_path, repo, bug.language),
+                default_actions=self.__get_default_actions(
+                    diff_folder_path, repo, bug.language, runner_image=runner_image
+                ),
                 runner_image=runner_image,
             )
 
