@@ -814,6 +814,16 @@ optional = ["python-socks", "wsaccel"]
 test = ["websockets"]
 
 [[package]]
+name = "wget"
+version = "3.2"
+description = "pure python download utility"
+optional = false
+python-versions = "*"
+files = [
+    {file = "wget-3.2.zip", hash = "sha256:35e630eca2aa50ce998b9b1a127bb26b30dfee573702782aa982f875e3f16061"},
+]
+
+[[package]]
 name = "wrapt"
 version = "1.16.0"
 description = "Module for decorators, wrappers and monkey patching."
@@ -895,4 +905,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "d1762e774e3a30b1f72e9153efe49b8964132d4423241321fcf7048a1bd477fa"
+content-hash = "d22abda5d1f41627023e728be95098c431c6d9bf1d31fdca1f85228ff971bcb6"
