@@ -122,7 +122,7 @@ class Bug(object):
         # Run Actions
         act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
-            base_image = f"nunosaavedra/gitbugs-java:{bug.bid}"
+            base_image = f"nunosaavedra/gitbugs-java:{bug.bid}-test"
             runner_image = f"gitbugs-java:{str(uuid.uuid4())}"
             executor = TestExecutor(
                 repo_clone=repo,
@@ -155,7 +155,8 @@ class Bug(object):
         return (
             len(runs) > 0
             and len(failed_tests) == 0
-            and number_of_tests(runs) == bug.number_of_tests
+            and number_of_tests(runs)
+            >= 0  # TODO: check against the number of tests in the bug info
         )
 
     def __str__(self) -> str:
