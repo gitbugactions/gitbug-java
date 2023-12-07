@@ -1,3 +1,4 @@
+import re
 import uuid
 import json
 import docker
@@ -6,6 +7,10 @@ import subprocess
 
 from pathlib import Path
 
+from gitbugs.gitbugactions.test_executor import TestExecutor
+from gitbugs.gitbugactions.actions.workflow import GitHubWorkflowFactory
+from gitbugs.gitbugactions.actions.actions import ActCacheDirManager, GitHubActions
+
 
 class Bug(object):
     def __init__(self, bug: dict) -> None:
@@ -13,6 +18,12 @@ class Bug(object):
             setattr(self, key, value)
 
         self.bug_info = bug
+        # replace the clone_url org with the gitbugactions fork
+        self.clone_url = re.sub(
+            r"https://github.com/.*/",
+            "https://github.com/gitbugactions/",
+            self.clone_url,
+        )
         self.bid = f"{self.repository.replace('/', '-')}-{self.commit_hash[:12]}"
 
     def __clone_repo(self, work_dir: str) -> pygit2.Repository:
@@ -62,6 +73,7 @@ class Bug(object):
         """
         Checkout the bug to the given workdir.
         """
+        # TODO: clone from somewhere we control
         # Clone the repository
         repo = self.__clone_repo(workdir)
 
@@ -77,35 +89,58 @@ class Bug(object):
             bug_info["fixed"] = fixed
             json.dump(bug_info, f)
 
+    # def __get_default_actions(diff_folder_path, repo_clone, language) -> GitHubActions:
+    #     workflow_dir_path = os.path.join(diff_folder_path, "workflow")
+    #     workflow_name = os.listdir(workflow_dir_path)[0]
+    #     workflow_path = os.path.join(workflow_dir_path, workflow_name)
+
+    #     github_actions_path = os.path.join(repo_clone.workdir, ".github", "workflows")
+    #     if not os.path.exists(github_actions_path):
+    #         os.makedirs(github_actions_path)
+    #     new_workflow_path = os.path.join(github_actions_path, str(uuid.uuid4()) + ".yml")
+    #     shutil.copyfile(workflow_path, new_workflow_path)
+
+    #     workflows = [GitHubWorkflowFactory.create_workflow(new_workflow_path, language)]
+
+    #     default_actions = GitHubActions(repo_clone.workdir, language)
+    #     default_actions.test_workflows = workflows
+
+    #     return default_actions
+
     def run(self, workdir: str) -> bool:
+        # Check if the workdir has a bug
+        if not Path(workdir, "gitbugs.json").exists():
+            raise ValueError(f"Workdir {workdir} does not contain a GitBugs-Java bug")
         # Read the bug info from the workdir
         with Path(workdir, "gitbugs.json").open("r") as f:
             bug_info = json.load(f)
             bug = Bug(bug_info)
 
         repo = pygit2.Repository(Path(workdir, ".git"))
-        docker_client = docker.from_env()
 
         act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
-            # TODO: load the correct image
-            image_name = f"gitbugactions-run-bug:{str(uuid.uuid4())}"
-            create_diff_image(
-                "gitbugactions:latest", image_name, get_diff_path(diff_folder_path)
-            )
+            image_name = f"nunosaavedra/gitbugs-java:{bug.bid}"
+            print(image_name)
             executor = TestExecutor(
                 repo,
-                bug["language"],
+                bug.language,
                 act_cache_dir,
-                get_default_actions(diff_folder_path, repo_clone, bug["language"]),
+                None,
                 runner=image_name,
             )
-            runs = executor.run_tests(offline=offline)
-            docker_client.images.remove(image_name)
+            runs = executor.run_tests(keep_containers=False, offline=True)
         finally:
             ActCacheDirManager.return_act_cache_dir(act_cache_dir)
 
-    return runs
+        # Process runs
+        def flat_failed_tests(runs):
+            return sum(map(lambda act_run: act_run.failed_tests, runs), [])
+
+        failed_tests = flat_failed_tests(runs)
+        print(failed_tests)
+
+        return len(failed_tests) == 0
 
     def __str__(self) -> str:
         return self.bid

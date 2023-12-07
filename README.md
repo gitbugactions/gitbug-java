@@ -4,7 +4,21 @@ GitBugs-Java is a reproducible Java benchmark of recent bugs.
 
 ## Setup GitBugs-Java
 
+Requirements:
+- Python
+- Poetry
+- Docker
 
+1. Setup Python environment
+```bash
+poetry shell
+poetry install
+```
+
+2. Add GitBugs-Java and custom Act version to path
+```bash
+export PATH="$(pwd):$(pwd)/bin:$PATH"
+```
 
 ## Use GitBugs-Java
 
