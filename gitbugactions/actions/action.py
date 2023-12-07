@@ -23,7 +23,7 @@ class Action:
         """
         Download the action to the action dir
         """
-        from gitbugs.gitbugactions.util import clone_repo
+        from gitbugactions.util import clone_repo
 
         logging.info(f"Downloading action {self.declaration} to {action_dir}")
 

@@ -3,8 +3,8 @@ from junitparser import TestCase
 from pathlib import Path
 import re
 
-from gitbugs.gitbugactions.actions.workflow import GitHubWorkflow
-from gitbugs.gitbugactions.actions.multi.junitxmlparser import JUnitXMLParser
+from gitbugactions.actions.workflow import GitHubWorkflow
+from gitbugactions.actions.multi.junitxmlparser import JUnitXMLParser
 
 
 class GradleWorkflow(GitHubWorkflow):

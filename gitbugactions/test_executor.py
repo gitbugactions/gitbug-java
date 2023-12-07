@@ -1,6 +1,6 @@
 import subprocess
 import os, copy, uuid, pygit2
-from gitbugs.gitbugactions.actions.actions import GitHubActions, ActTestsRun
+from gitbugactions.actions.actions import GitHubActions, ActTestsRun
 from pygit2 import Repository
 from typing import List
 
@@ -12,12 +12,10 @@ class TestExecutor:
         language: str,
         act_cache_dir: str,
         default_actions: GitHubActions,
-        base_image: str,
         runner_image: str,
     ):
         self.act_cache_dir = act_cache_dir
         self.repo_clone = repo_clone
-        self.base_image = base_image
         self.runner_image = runner_image
         self.language = language
         # Note: these default actions may have different configuration options such as paths, runners, etc.
@@ -34,7 +32,6 @@ class TestExecutor:
             self.repo_clone.workdir,
             self.language,
             keep_containers=keep_containers,
-            base_image=self.base_image,
             runner_image=self.runner_image,
             offline=offline,
         )

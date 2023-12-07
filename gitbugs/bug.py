@@ -1,15 +1,18 @@
 import re
+import os
 import uuid
 import json
 import docker
 import pygit2
+import shutil
 import subprocess
 
 from pathlib import Path
 
-from gitbugs.gitbugactions.test_executor import TestExecutor
-from gitbugs.gitbugactions.actions.workflow import GitHubWorkflowFactory
-from gitbugs.gitbugactions.actions.actions import ActCacheDirManager, GitHubActions
+from gitbugactions.test_executor import TestExecutor
+from gitbugactions.docker.export import create_diff_image
+from gitbugactions.actions.workflow import GitHubWorkflowFactory
+from gitbugactions.actions.actions import ActCacheDirManager, GitHubActions
 
 
 class Bug(object):
@@ -24,6 +27,7 @@ class Bug(object):
             "https://github.com/gitbugactions/",
             self.clone_url,
         )
+        self.pid = self.repository.replace("/", "-")
         self.bid = f"{self.repository.replace('/', '-')}-{self.commit_hash[:12]}"
 
     def __clone_repo(self, work_dir: str) -> pygit2.Repository:
@@ -89,23 +93,28 @@ class Bug(object):
             bug_info["fixed"] = fixed
             json.dump(bug_info, f)
 
-    # def __get_default_actions(diff_folder_path, repo_clone, language) -> GitHubActions:
-    #     workflow_dir_path = os.path.join(diff_folder_path, "workflow")
-    #     workflow_name = os.listdir(workflow_dir_path)[0]
-    #     workflow_path = os.path.join(workflow_dir_path, workflow_name)
+    def __get_default_actions(self, diff_folder_path, repo_clone, language) -> GitHubActions:
+        workflow_dir_path = os.path.join(diff_folder_path, "workflow")
+        workflow_name = os.listdir(workflow_dir_path)[0]
+        workflow_path = os.path.join(workflow_dir_path, workflow_name)
 
-    #     github_actions_path = os.path.join(repo_clone.workdir, ".github", "workflows")
-    #     if not os.path.exists(github_actions_path):
-    #         os.makedirs(github_actions_path)
-    #     new_workflow_path = os.path.join(github_actions_path, str(uuid.uuid4()) + ".yml")
-    #     shutil.copyfile(workflow_path, new_workflow_path)
+        github_actions_path = os.path.join(repo_clone.workdir, ".github", "workflows")
+        if not os.path.exists(github_actions_path):
+            os.makedirs(github_actions_path)
+        new_workflow_path = os.path.join(github_actions_path, str(uuid.uuid4()) + ".yml")
+        shutil.copyfile(workflow_path, new_workflow_path)
 
-    #     workflows = [GitHubWorkflowFactory.create_workflow(new_workflow_path, language)]
+        workflows = [GitHubWorkflowFactory.create_workflow(new_workflow_path, language)]
 
-    #     default_actions = GitHubActions(repo_clone.workdir, language)
-    #     default_actions.test_workflows = workflows
+        default_actions = GitHubActions(repo_clone.workdir, language)
+        default_actions.test_workflows = workflows
 
-    #     return default_actions
+        return default_actions
+
+    def __get_diff_path(self, diff_folder_path):
+        for path in os.listdir(diff_folder_path):
+            if path != "workflow":
+                return os.path.join(diff_folder_path, path)
 
     def run(self, workdir: str) -> bool:
         # Check if the workdir has a bug
@@ -122,16 +131,22 @@ class Bug(object):
         # Run Actions
         act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
-            base_image = f"nunosaavedra/gitbugs-java:{bug.bid}-test"
+            base_image = f"gitbugs-java:base"
             runner_image = f"gitbugs-java:{str(uuid.uuid4())}"
+
+            diff_folder_path = Path("data", self.pid, self.commit_hash)
+            create_diff_image(
+                base_image, runner_image, self.__get_diff_path(diff_folder_path)
+            )
+
             executor = TestExecutor(
                 repo_clone=repo,
                 language=bug.language,
                 act_cache_dir=act_cache_dir,
-                default_actions=None,
-                base_image=base_image,
+                default_actions=self.__get_default_actions(diff_folder_path, repo, bug.language),
                 runner_image=runner_image,
             )
+
             runs = executor.run_tests(keep_containers=False, offline=True)
             docker_client.images.remove(runner_image, force=True)
         finally:

@@ -3,8 +3,8 @@ import logging
 from abc import ABC, abstractmethod
 from junitparser import TestCase
 from typing import List, Set
-from gitbugs.gitbugactions.github_token import GithubToken
-from gitbugs.gitbugactions.actions.action import Action
+from gitbugactions.github_token import GithubToken
+from gitbugactions.actions.action import Action
 
 
 class GitHubWorkflow(ABC):
@@ -341,9 +341,9 @@ class GitHubWorkflow(ABC):
             yaml.dump(self.doc, file)
 
 
-from gitbugs.gitbugactions.actions.multi.unknown_workflow import UnknownWorkflow
-from gitbugs.gitbugactions.actions.java.maven_workflow import MavenWorkflow
-from gitbugs.gitbugactions.actions.java.gradle_workflow import GradleWorkflow
+from gitbugactions.actions.multi.unknown_workflow import UnknownWorkflow
+from gitbugactions.actions.java.maven_workflow import MavenWorkflow
+from gitbugactions.actions.java.gradle_workflow import GradleWorkflow
 
 
 class GitHubWorkflowFactory:

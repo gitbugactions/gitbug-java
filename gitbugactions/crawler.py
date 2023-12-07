@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from github import Github, Repository, RateLimitExceededException
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from gitbugs.gitbugactions.github_token import GithubToken
+from gitbugactions.github_token import GithubToken
 
 # FIXME change to custom logger
 logging.basicConfig(level=logging.INFO)

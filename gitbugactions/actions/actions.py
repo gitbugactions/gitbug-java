@@ -1,19 +1,17 @@
 import os, tempfile, shutil, traceback
-import grp
 import uuid
 import time
 import docker
 import logging
 import subprocess
 import threading
-from pathlib import Path
 
 from typing import List, Dict, Set
 from junitparser import TestCase, Error
 from dataclasses import dataclass
-from gitbugs.gitbugactions.actions.workflow import GitHubWorkflow, GitHubWorkflowFactory
-from gitbugs.gitbugactions.github_token import GithubToken
-from gitbugs.gitbugactions.actions.action import Action
+from gitbugactions.actions.workflow import GitHubWorkflow, GitHubWorkflowFactory
+from gitbugactions.github_token import GithubToken
+from gitbugactions.actions.action import Action
 
 
 class ActCacheDirManager:
@@ -196,7 +194,6 @@ class Act:
 
     def __init__(
         self,
-        base_image: str,
         runner_image: str,
         timeout=5,
         reuse: bool = False,
@@ -206,7 +203,7 @@ class Act:
         Args:
             timeout (int): Timeout in minutes
         """
-        Act.__setup_act(base_image=base_image, runner_image=runner_image)
+        Act.__setup_act(runner_image=runner_image)
         if reuse:
             self.flags = "--reuse"
         else:
@@ -222,7 +219,7 @@ class Act:
         self.timeout = timeout
 
     @staticmethod
-    def __setup_act(base_image: str, runner_image: str):
+    def __setup_act(runner_image: str):
         with Act.__SETUP_LOCK:
             if Act.__ACT_SETUP:
                 return
@@ -234,32 +231,12 @@ class Act:
                 logging.error("Act is not correctly installed")
                 exit(-1)
 
-            # Checks that base image exists
+            # Checks that runner image exists
             client = docker.from_env()
-            if len(client.images.list(name=base_image)) != 1:
-                logging.error(f"Base image {base_image} does not exist")
+            if len(client.images.list(name=runner_image)) != 1:
+                logging.error(f"Base image {runner_image} does not exist")
                 exit(-1)
 
-            # Removes runner image if exists
-            if len(client.images.list(name=runner_image)) > 0:
-                client.images.remove(image=runner_image, force=True)
-
-            # Write a Dockerfile to a temporary directory and build the runner image
-            tmp_dir = tempfile.mkdtemp()
-            Path(tmp_dir).mkdir(parents=True, exist_ok=True)
-            dockerfile_path = Path(tmp_dir, "Dockerfile")
-            with dockerfile_path.open("w") as f:
-                client = docker.from_env()
-                dockerfile = f"FROM {base_image}\n"
-                # HACK: We set runneradmin to an arbitrarily large uid to avoid conflicts with the host's
-                dockerfile += f"RUN sudo usermod -u 4000000 runneradmin\n"
-                dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
-                dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
-                dockerfile += f"RUN sudo usermod -o -u {os.getuid()} runner\n"
-                f.write(dockerfile)
-
-            client.images.build(path=tmp_dir, tag=runner_image, forcerm=True)
-            shutil.rmtree(tmp_dir, ignore_errors=True)
             Act.__ACT_SETUP = True
 
     @staticmethod
@@ -338,7 +315,6 @@ class GitHubActions:
         self,
         repo_path,
         language: str,
-        base_image: str,
         runner_image: str,
         keep_containers: bool = False,
         offline: bool = False,
@@ -348,7 +324,6 @@ class GitHubActions:
         self.language: str = language.strip().lower()
         self.workflows: List[GitHubWorkflow] = []
         self.test_workflows: List[GitHubWorkflow] = []
-        self.base_image = base_image
         self.runner_image = runner_image
         self.offline = offline
 
@@ -417,7 +392,6 @@ class GitHubActions:
 
     def run_workflow(self, workflow, act_cache_dir: str) -> ActTestsRun:
         act = Act(
-            base_image=self.base_image,
             runner_image=self.runner_image,
             timeout=10,
             reuse=self.keep_containers,

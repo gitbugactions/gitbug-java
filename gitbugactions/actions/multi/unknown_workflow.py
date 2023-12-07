@@ -1,7 +1,7 @@
 from typing import List
 from junitparser import TestCase
 
-from gitbugs.gitbugactions.actions.workflow import GitHubWorkflow
+from gitbugactions.actions.workflow import GitHubWorkflow
 
 
 class UnknownWorkflow(GitHubWorkflow):
