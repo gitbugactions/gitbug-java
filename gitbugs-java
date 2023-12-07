@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import fire
+import json
+
+from pathlib import Path
+from gitbugs.project import Project
+from gitbugs.bug import Bug
+
+
+class GitBugsJavaCli(object):
+    """GitBugs-Java CLI"""
+
+    def __init__(self):
+        self.projects = {}
+
+        # Load the GitBugs-Java dataset
+        for project_file in Path("data", "bugs").glob("*.json"):
+            with project_file.open("r") as f:
+                pid = project_file.stem
+                project = Project(pid)
+                for line in f.readlines():
+                    bug = json.loads(line)
+                    project.add_bug(Bug(bug))
+                self.projects[pid] = project
+
+        # Sort the projects by pid
+        self.projects = dict(sorted(self.projects.items(), key=lambda x: x[0]))
+
+    def pids(self):
+        """
+        List all available project ids in GitBugs-Java
+        """
+        for project in self.projects:
+            print(project.pid)
+
+    def bids(self, pid: str = None):
+        """
+        List all available bug ids in GitBugs-Java (for a given project id if specified)
+        """
+        for pid in self.projects:
+            if pid is None or pid == pid:
+                for bug in self.projects[pid].get_bugs():
+                    print(bug.bid)
+
+    def checkout(self, pid: str, bid: str, work_dir: str, fixed: bool = False):
+        """
+        Checkout a specific bug in GitBugs-Java
+        """
+        # Check the pid and bid exist
+        if pid not in self.projects:
+            raise ValueError(f"Unknown project id {pid}")
+
+        project = self.projects[pid]
+        bug = project.get_bug(bid)
+        if bug is None:
+            raise ValueError(f"Unknown bug id {bid} for project {pid}")
+
+        # Create the workdir if it does not exist
+        os.makedirs(work_dir, exist_ok=True)
+
+        # Make sure the workdir is empty
+        if os.listdir(work_dir):
+            raise ValueError(f"Workdir {work_dir} is not empty")
+
+        # Checkout the bug
+        bug.checkout(work_dir, fixed=fixed)
+
+    def run(self, workdir: str) -> bool:
+        """
+        Run the bug checked-out in workdir
+        """
+        # Read the bug info from the workdir
+        with Path(workdir, "gitbugs.json").open("r") as f:
+            bug_info = json.load(f)
+            bug = Bug(bug_info)
+
+        # Run the bug
+        return bug.run(workdir)
+
+
+def main():
+    fire.Fire(GitBugsJavaCli)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
