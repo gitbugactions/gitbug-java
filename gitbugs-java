@@ -1,0 +1,170 @@
+#!/usr/bin/env python
+
+import os
+import sys, grp
+import fire
+import json
+import tqdm
+import shutil
+import docker
+import tarfile
+import tempfile
+import requests
+
+from pathlib import Path
+from gitbugs.project import Project
+from gitbugs.bug import Bug
+
+
+class GitBugsJavaCli(object):
+    """GitBugs-Java CLI"""
+
+    def __init__(self):
+        self.projects = {}
+
+        # Load the GitBugs-Java dataset
+        for project_file in Path("data", "bugs").glob("*.json"):
+            with project_file.open("r") as f:
+                pid = project_file.stem
+                project = Project(pid)
+                for line in f.readlines():
+                    bug = json.loads(line)
+                    project.add_bug(Bug(bug))
+                self.projects[pid] = project
+
+        # Sort the projects by pid
+        self.projects = dict(sorted(self.projects.items(), key=lambda x: x[0]))
+
+    def __setup_base_image(self):
+        base_image = f"nunosaavedra/gitbug-actions:setup"
+        runner_image = f"gitbugs-java:base"
+
+        client = docker.from_env()
+        # Return if image already exists
+        if len(client.images.list(name=runner_image)) > 0:
+            return
+
+        tmp_dir = tempfile.mkdtemp()
+        Path(tmp_dir).mkdir(parents=True, exist_ok=True)
+        dockerfile_path = Path(tmp_dir, "Dockerfile")
+        with dockerfile_path.open("w") as f:
+            client = docker.from_env()
+            dockerfile = f"FROM {base_image}\n"
+            # HACK: We set runneradmin to an arbitrarily large uid to avoid conflicts with the host's
+            dockerfile += f"RUN sudo usermod -u 4000000 runneradmin\n"
+            dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
+            dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
+            dockerfile += f"RUN sudo usermod -o -u {os.getuid()} runner\n"
+            f.write(dockerfile)
+
+        client.images.build(path=tmp_dir, tag=runner_image, forcerm=True)
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    def __download(self, url: str, filename: str):
+        with open(filename, "wb") as f:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                total = int(r.headers.get("content-length", 0))
+
+                # tqdm has many interesting parameters. Feel free to experiment!
+                tqdm_params = {
+                    "desc": url,
+                    "total": total,
+                    "miniters": 1,
+                    "unit": "B",
+                    "unit_scale": True,
+                    "unit_divisor": 1024,
+                }
+                with tqdm.tqdm(**tqdm_params) as pb:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        pb.update(len(chunk))
+                        f.write(chunk)
+
+    def __setup_exports(self, name: str, download_url: str):
+        gitbugs = Path("data", f"{name}.tar.gz")
+        self.__download(download_url, gitbugs)
+        # Extract the dataset
+        with tarfile.open(gitbugs) as tar:
+            tar.extractall("data")
+
+        source = f"data/{name}"
+        for f in os.listdir(source):
+            shutil.move(os.path.join(source, f), "data/")
+        os.rmdir(source)
+        os.remove(gitbugs)
+
+    def pids(self):
+        """
+        List all available project ids in GitBugs-Java
+        """
+        for project in self.projects:
+            print(project.pid)
+
+    def bids(self, pid: str = None):
+        """
+        List all available bug ids in GitBugs-Java (for a given project id if specified)
+        """
+        for ppid in self.projects:
+            if pid is None or ppid == pid:
+                for bug in self.projects[ppid].get_bugs():
+                    print(bug.bid)
+
+    def checkout(self, pid: str, bid: str, work_dir: str, fixed: bool = False):
+        """
+        Checkout a specific bug in GitBugs-Java
+        """
+        # Check the pid and bid exist
+        if pid not in self.projects:
+            raise ValueError(f"Unknown project id {pid}")
+
+        project = self.projects[pid]
+        bug = project.get_bug(bid)
+        if bug is None:
+            raise ValueError(f"Unknown bug id {bid} for project {pid}")
+
+        # Create the workdir if it does not exist
+        os.makedirs(work_dir, exist_ok=True)
+
+        # Make sure the workdir is empty
+        if os.listdir(work_dir):
+            raise ValueError(f"Workdir {work_dir} is not empty")
+
+        # Checkout the bug
+        bug.checkout(work_dir, fixed=fixed)
+
+    def run(self, workdir: str) -> bool:
+        """
+        Run the bug checked-out in workdir
+        """
+        # Read the bug info from the workdir
+        with Path(workdir, "gitbugs.json").open("r") as f:
+            bug_info = json.load(f)
+            bug = Bug(bug_info)
+
+        # Run the bug
+        return bug.run(workdir)
+
+    def setup(self):
+        """
+        Setup the GitBugs-Java dataset
+        """
+        if not os.path.exists("data"):
+            os.makedirs("data")
+        self.__setup_base_image()
+        # TODO: check if exports are already downloaded
+        self.__setup_exports(
+            "gitbugs-java_offline_environments_1",
+            "https://zenodo.org/records/10288440/files/gitbugs-java_offline_environments_1.tar.gz?download=1",
+        )
+        self.__setup_exports(
+            "gitbugs-java_offline_environments_2",
+            "https://zenodo.org/records/10291028/files/gitbugs-java_offline_environments_2.tar.gz?download=1",
+        )
+
+
+def main():
+    fire.Fire(GitBugsJavaCli)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
