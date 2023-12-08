@@ -51,9 +51,7 @@ class GitBugsJavaCli(object):
             dockerfile = f"FROM {base_image}\n"
             # HACK: We set runneradmin to an arbitrarily large uid to avoid conflicts with the host's
             dockerfile += f"RUN sudo usermod -u 4000000 runneradmin\n"
-            dockerfile += (
-                f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
-            )
+            dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
             dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
             dockerfile += f"RUN sudo usermod -o -u {os.getuid()} runner\n"
             f.write(dockerfile)
@@ -124,7 +122,7 @@ class GitBugsJavaCli(object):
 
         # Run the bug
         return bug.run(workdir)
-    
+
     def setup(self):
         """
         Setup the GitBugs-Java dataset
@@ -133,13 +131,14 @@ class GitBugsJavaCli(object):
             os.makedirs("data")
         self.__setup_base_image()
         self.__setup_exports(
-            "gitbugs-java_offline_environments_1", 
-            "https://zenodo.org/records/10288440/files/gitbugs-java_offline_environments_1.tar.gz?download=1"
+            "gitbugs-java_offline_environments_1",
+            "https://zenodo.org/records/10288440/files/gitbugs-java_offline_environments_1.tar.gz?download=1",
         )
         self.__setup_exports(
-            "gitbugs-java_offline_environments_2", 
-            "https://zenodo.org/records/10291028/files/gitbugs-java_offline_environments_2.tar.gz?download=1"
+            "gitbugs-java_offline_environments_2",
+            "https://zenodo.org/records/10291028/files/gitbugs-java_offline_environments_2.tar.gz?download=1",
         )
+
 
 def main():
     fire.Fire(GitBugsJavaCli)
