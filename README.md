@@ -20,6 +20,11 @@ poetry install
 export PATH="$(pwd):$(pwd)/bin:$PATH"
 ```
 
+3. Run Setup (Installs Docker Image ~50GiB, downloads required dependencies ~80GiB)
+```bash
+gitbugs-java setup
+```
+
 ## Use GitBugs-Java
 
 1. List all available project ids
@@ -43,3 +48,5 @@ gitbugs-java run WORK_DIR
 ```
 
 ## Contents of GitBugs-Java
+
+Please refer to the paper
