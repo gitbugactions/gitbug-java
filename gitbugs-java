@@ -40,7 +40,7 @@ class GitBugsJavaCli(object):
 
         client = docker.from_env()
         # Return if image already exists
-        if len(client.images.list(name=runner_image)) != 1:
+        if len(client.images.list(name=runner_image)) > 0:
             return
 
         tmp_dir = tempfile.mkdtemp()
