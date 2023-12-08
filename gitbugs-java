@@ -104,9 +104,9 @@ class GitBugsJavaCli(object):
         """
         List all available bug ids in GitBugs-Java (for a given project id if specified)
         """
-        for pid in self.projects:
-            if pid is None or pid == pid:
-                for bug in self.projects[pid].get_bugs():
+        for ppid in self.projects:
+            if pid is None or ppid == pid:
+                for bug in self.projects[ppid].get_bugs():
                     print(bug.bid)
 
     def checkout(self, pid: str, bid: str, work_dir: str, fixed: bool = False):
