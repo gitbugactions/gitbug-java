@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
 import os
-import wget
 import sys, grp
 import fire
 import json
+import tqdm
 import shutil
 import docker
 import tarfile
 import tempfile
+import requests
 
 from pathlib import Path
 from gitbugs.project import Project
@@ -59,9 +60,29 @@ class GitBugsJavaCli(object):
         client.images.build(path=tmp_dir, tag=runner_image, forcerm=True)
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
+    def __download(self, url: str, filename: str):
+        with open(filename, "wb") as f:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                total = int(r.headers.get("content-length", 0))
+
+                # tqdm has many interesting parameters. Feel free to experiment!
+                tqdm_params = {
+                    "desc": url,
+                    "total": total,
+                    "miniters": 1,
+                    "unit": "B",
+                    "unit_scale": True,
+                    "unit_divisor": 1024,
+                }
+                with tqdm.tqdm(**tqdm_params) as pb:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        pb.update(len(chunk))
+                        f.write(chunk)
+
     def __setup_exports(self, name: str, download_url: str):
         gitbugs = Path("data", f"{name}.tar.gz")
-        wget.download(download_url, str(gitbugs))
+        self.__download(download_url, gitbugs)
         # Extract the dataset
         with tarfile.open(gitbugs) as tar:
             tar.extractall("data")
@@ -130,6 +151,7 @@ class GitBugsJavaCli(object):
         if not os.path.exists("data"):
             os.makedirs("data")
         self.__setup_base_image()
+        # TODO: check if exports are already downloaded
         self.__setup_exports(
             "gitbugs-java_offline_environments_1",
             "https://zenodo.org/records/10288440/files/gitbugs-java_offline_environments_1.tar.gz?download=1",
