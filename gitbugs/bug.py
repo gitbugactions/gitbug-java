@@ -145,6 +145,7 @@ class Bug(object):
                 base_image, runner_image, self.__get_diff_path(diff_folder_path)
             )
 
+            # TODO: use a hardcoded path to act
             executor = TestExecutor(
                 repo_clone=repo,
                 language=bug.language,
@@ -178,8 +179,7 @@ class Bug(object):
         return (
             len(runs) > 0
             and len(failed_tests) == 0
-            and number_of_tests(runs)
-            >= 0  # TODO: check against the number of tests in the bug info
+            and number_of_tests(runs) > 0  # TODO: check against the number of tests in the bug info
         )
 
     def __str__(self) -> str:
