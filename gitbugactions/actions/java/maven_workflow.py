@@ -22,7 +22,14 @@ class MavenWorkflow(GitHubWorkflow):
         return False
 
     def instrument_test_steps(self):
-        pass
+        # Add an "--offline" option to the test command
+        # FIXME: only when offline option is given
+        if "jobs" in self.doc:
+            for _, job in self.doc["jobs"].items():
+                if "steps" in job:
+                    for step in job["steps"]:
+                        if "run" in step and self._is_test_command(step["run"]):
+                            step["run"] += " -offline"
 
     def get_test_results(self, repo_path) -> List[TestCase]:
         parser = JUnitXMLParser()

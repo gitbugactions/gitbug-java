@@ -179,7 +179,8 @@ class Bug(object):
         return (
             len(runs) > 0
             and len(failed_tests) == 0
-            and number_of_tests(runs) > 0  # TODO: check against the number of tests in the bug info
+            and number_of_tests(runs)
+            > 0  # TODO: check against the number of tests in the bug info
         )
 
     def __str__(self) -> str:
