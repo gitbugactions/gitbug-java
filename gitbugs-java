@@ -98,7 +98,7 @@ class GitBugsJavaCli(object):
         List all available project ids in GitBugs-Java
         """
         for project in self.projects:
-            print(project.pid)
+            print(project)
 
     def bids(self, pid: str = None):
         """
