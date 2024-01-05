@@ -82,15 +82,15 @@ class GitBugsJavaCli(object):
 
     def __setup_exports(self, name: str, download_url: str):
         gitbugs = Path("data", f"{name}.tar.gz")
-        self.__download(download_url, gitbugs)
+        if not gitbugs.exists():
+            self.__download(download_url, gitbugs)
         # Extract the dataset
         with tarfile.open(gitbugs) as tar:
             tar.extractall("data")
 
         source = f"data/{name}"
-        for f in os.listdir(source):
-            shutil.move(os.path.join(source, f), "data/")
-        os.rmdir(source)
+        shutil.copytree(source, "data/", dirs_exist_ok=True)
+        shutil.rmtree(source)
         os.remove(gitbugs)
 
     def pids(self):
