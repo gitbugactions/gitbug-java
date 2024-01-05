@@ -20,7 +20,7 @@ class GitBugsJavaCli(object):
     """GitBugs-Java CLI"""
 
     def __init__(self):
-        self.projects = {}
+        self.__projects = {}
 
         # Load the GitBugs-Java dataset
         for project_file in Path("data", "bugs").glob("*.json"):
@@ -30,10 +30,10 @@ class GitBugsJavaCli(object):
                 for line in f.readlines():
                     bug = json.loads(line)
                     project.add_bug(Bug(bug))
-                self.projects[pid] = project
+                self.__projects[pid] = project
 
         # Sort the projects by pid
-        self.projects = dict(sorted(self.projects.items(), key=lambda x: x[0]))
+        self.__projects = dict(sorted(self.__projects.items(), key=lambda x: x[0]))
 
     def __setup_base_image(self):
         base_image = f"nunosaavedra/gitbug-actions:setup"
@@ -97,16 +97,16 @@ class GitBugsJavaCli(object):
         """
         List all available project ids in GitBugs-Java
         """
-        for project in self.projects:
+        for project in self.__projects:
             print(project)
 
     def bids(self, pid: str = None):
         """
         List all available bug ids in GitBugs-Java (for a given project id if specified)
         """
-        for ppid in self.projects:
+        for ppid in self.__projects:
             if pid is None or ppid == pid:
-                for bug in self.projects[ppid].get_bugs():
+                for bug in self.__projects[ppid].get_bugs():
                     print(bug.bid)
 
     def checkout(self, pid: str, bid: str, work_dir: str, fixed: bool = False):
@@ -114,10 +114,10 @@ class GitBugsJavaCli(object):
         Checkout a specific bug in GitBugs-Java
         """
         # Check the pid and bid exist
-        if pid not in self.projects:
+        if pid not in self.__projects:
             raise ValueError(f"Unknown project id {pid}")
 
-        project = self.projects[pid]
+        project = self.__projects[pid]
         bug = project.get_bug(bid)
         if bug is None:
             raise ValueError(f"Unknown bug id {bid} for project {pid}")
