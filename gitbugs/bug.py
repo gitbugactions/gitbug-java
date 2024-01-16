@@ -77,7 +77,6 @@ class Bug(object):
         """
         Checkout the bug to the given workdir.
         """
-        # TODO: clone from somewhere we control
         # Clone the repository
         repo = self.__clone_repo(workdir)
 
