@@ -64,10 +64,10 @@ class Bug(object):
         # Otherwise, we are testing the non code patch alone
         if len(self.non_code_patch) > 0 and len(self.bug_patch) > 0:
             repo.apply(pygit2.Diff.parse_diff(str(self.non_code_patch)))
-            return True
 
-        # We apply the test patch
-        repo.apply(pygit2.Diff.parse_diff(str(self.test_patch)))
+        # We apply the test patch when the test patch is non-empty
+        if len(self.test_patch) > 0:
+            repo.apply(pygit2.Diff.parse_diff(str(self.test_patch)))
 
     def __checkout_fixed(self, repo: pygit2.Repository) -> None:
         # Checkout the fixed version
