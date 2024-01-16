@@ -109,10 +109,13 @@ class GitBugsJavaCli(object):
                 for bug in self.__projects[ppid].get_bugs():
                     print(bug.bid)
 
-    def checkout(self, pid: str, bid: str, work_dir: str, fixed: bool = False):
+    def checkout(self, bid: str, work_dir: str, fixed: bool = False):
         """
         Checkout a specific bug in GitBugs-Java
         """
+        # Split bid on the last occurence of "-"
+        pid, _ = bid.rsplit("-", 1)
+
         # Check the pid and bid exist
         if pid not in self.__projects:
             raise ValueError(f"Unknown project id {pid}")
