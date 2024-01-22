@@ -1,10 +1,10 @@
-# GitBugs-Java
+# GitBug-Java
 
-GitBugs-Java is a reproducible Java benchmark of recent bugs.
+GitBug-Java is a reproducible Java benchmark of recent bugs.
 
 [Visualization](https://www.nuno.saavedra.pt/gitbugs-java)
 
-## Setup GitBugs-Java
+## Setup GitBug-Java
 
 Requirements:
 - Python
@@ -17,38 +17,38 @@ poetry shell
 poetry install
 ```
 
-2. Add GitBugs-Java and custom Act version to path
+2. Add GitBug-Java and custom Act version to path
 ```bash
 export PATH="$(pwd):$(pwd)/bin:$PATH"
 ```
 
 3. Run Setup (Installs Docker Image ~50GiB, downloads required dependencies ~80GiB)
 ```bash
-gitbugs-java setup
+gitbug-java setup
 ```
 
-## Use GitBugs-Java
+## Use GitBug-Java
 
 1. List all available project ids
 ```bash
-gitbugs-java pids
+gitbug-java pids
 ```
 
 2. List all available bug ids
 ```bash
-gitbugs-java bids [-p=PID]
+gitbug-java bids [-p=PID]
 ```
 
 3. Checkout bug-fix
 ```bash
-gitbugs-java checkout PID BID WORK_DIR [--fixed]
+gitbug-java checkout PID BID WORK_DIR [--fixed]
 ```
 
 4. Run Actions
 ```bash
-gitbugs-java run WORK_DIR
+gitbug-java run WORK_DIR
 ```
 
-## Contents of GitBugs-Java
+## Contents of GitBug-Java
 
 Please refer to the paper
