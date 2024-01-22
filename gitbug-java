@@ -12,17 +12,17 @@ import tempfile
 import requests
 
 from pathlib import Path
-from gitbugs.project import Project
-from gitbugs.bug import Bug
+from gitbug.project import Project
+from gitbug.bug import Bug
 
 
-class GitBugsJavaCli(object):
-    """GitBugs-Java CLI"""
+class GitBugJavaCli(object):
+    """GitBug-Java CLI"""
 
     def __init__(self):
         self.__projects = {}
 
-        # Load the GitBugs-Java dataset
+        # Load the GitBug-Java dataset
         for project_file in Path("data", "bugs").glob("*.json"):
             with project_file.open("r") as f:
                 pid = project_file.stem
@@ -37,7 +37,7 @@ class GitBugsJavaCli(object):
 
     def __setup_base_image(self):
         base_image = f"nunosaavedra/gitbug-actions:setup"
-        runner_image = f"gitbugs-java:base"
+        runner_image = f"gitbug-java:base"
 
         client = docker.from_env()
         # Return if image already exists
@@ -81,28 +81,28 @@ class GitBugsJavaCli(object):
                         f.write(chunk)
 
     def __setup_exports(self, name: str, download_url: str):
-        gitbugs = Path("data", f"{name}.tar.gz")
-        if not gitbugs.exists():
-            self.__download(download_url, gitbugs)
+        gitbug = Path("data", f"{name}.tar.gz")
+        if not gitbug.exists():
+            self.__download(download_url, gitbug)
         # Extract the dataset
-        with tarfile.open(gitbugs) as tar:
+        with tarfile.open(gitbug) as tar:
             tar.extractall("data")
 
         source = f"data/{name}"
         shutil.copytree(source, "data/", dirs_exist_ok=True)
         shutil.rmtree(source)
-        os.remove(gitbugs)
+        os.remove(gitbug)
 
     def pids(self):
         """
-        List all available project ids in GitBugs-Java
+        List all available project ids in GitBug-Java
         """
         for project in self.__projects:
             print(project)
 
     def bids(self, pid: str = None):
         """
-        List all available bug ids in GitBugs-Java (for a given project id if specified)
+        List all available bug ids in GitBug-Java (for a given project id if specified)
         """
         for ppid in self.__projects:
             if pid is None or ppid == pid:
@@ -111,7 +111,7 @@ class GitBugsJavaCli(object):
 
     def checkout(self, bid: str, work_dir: str, fixed: bool = False):
         """
-        Checkout a specific bug in GitBugs-Java
+        Checkout a specific bug in GitBug-Java
         """
         # Split bid on the last occurence of "-"
         pid, _ = bid.rsplit("-", 1)
@@ -140,7 +140,7 @@ class GitBugsJavaCli(object):
         Run the bug checked-out in workdir
         """
         # Read the bug info from the workdir
-        with Path(workdir, "gitbugs.json").open("r") as f:
+        with Path(workdir, "gitbug.json").open("r") as f:
             bug_info = json.load(f)
             bug = Bug(bug_info)
 
@@ -149,24 +149,24 @@ class GitBugsJavaCli(object):
 
     def setup(self):
         """
-        Setup the GitBugs-Java dataset
+        Setup the GitBug-Java dataset
         """
         if not os.path.exists("data"):
             os.makedirs("data")
         self.__setup_base_image()
         # TODO: check if exports are already downloaded
         self.__setup_exports(
-            "gitbugs-java_offline_environments_1",
-            "https://zenodo.org/records/10288440/files/gitbugs-java_offline_environments_1.tar.gz?download=1",
+            "gitbug-java_offline_environments_1",
+            "https://zenodo.org/records/10288440/files/gitbug-java_offline_environments_1.tar.gz?download=1",
         )
         self.__setup_exports(
-            "gitbugs-java_offline_environments_2",
-            "https://zenodo.org/records/10291028/files/gitbugs-java_offline_environments_2.tar.gz?download=1",
+            "gitbug-java_offline_environments_2",
+            "https://zenodo.org/records/10291028/files/gitbug-java_offline_environments_2.tar.gz?download=1",
         )
 
 
 def main():
-    fire.Fire(GitBugsJavaCli)
+    fire.Fire(GitBugJavaCli)
 
 
 if __name__ == "__main__":

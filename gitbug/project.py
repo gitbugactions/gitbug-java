@@ -1,4 +1,4 @@
-from gitbugs.bug import Bug
+from gitbug.bug import Bug
 from typing import Optional
 
 

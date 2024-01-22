@@ -87,7 +87,7 @@ class Bug(object):
             self.__checkout_buggy(repo)
 
         # Dump bug info to file
-        with Path(workdir, "gitbugs.json").open("w") as f:
+        with Path(workdir, "gitbug.json").open("w") as f:
             bug_info = self.bug_info
             bug_info["fixed"] = fixed
             json.dump(bug_info, f)
@@ -123,10 +123,10 @@ class Bug(object):
 
     def run(self, workdir: str) -> bool:
         # Check if the workdir has a bug
-        if not Path(workdir, "gitbugs.json").exists():
-            raise ValueError(f"Workdir {workdir} does not contain a GitBugs-Java bug")
+        if not Path(workdir, "gitbug.json").exists():
+            raise ValueError(f"Workdir {workdir} does not contain a GitBug-Java bug")
         # Read the bug info from the workdir
-        with Path(workdir, "gitbugs.json").open("r") as f:
+        with Path(workdir, "gitbug.json").open("r") as f:
             bug_info = json.load(f)
             bug = Bug(bug_info)
 
@@ -136,8 +136,8 @@ class Bug(object):
         # Run Actions
         act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
-            base_image = f"gitbugs-java:base"
-            runner_image = f"gitbugs-java:{str(uuid.uuid4())}"
+            base_image = f"gitbug-java:base"
+            runner_image = f"gitbug-java:{str(uuid.uuid4())}"
 
             diff_folder_path = Path("data", self.pid, self.commit_hash)
             create_diff_image(

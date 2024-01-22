@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gitbugs-java"
+name = "gitbug-java"
 version = "0.1.0"
 description = "A Reproducible Java Benchmark of Recent Bugs"
 authors = ["André Silva <andreans@kth.se>", "Nuno Saavedra <nuno.saavedra@tecnico.ulisboa.pt>"]
