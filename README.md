@@ -2,7 +2,7 @@
 
 GitBug-Java is a reproducible Java benchmark of recent bugs.
 
-[Visualization](https://www.nuno.saavedra.pt/gitbugs-java)
+[Visualization](https://nfsaavedra.github.io/gitbug-java)
 
 ## Setup GitBug-Java
 
