@@ -210,9 +210,14 @@ class Bug(object):
         )
 
         sys.exit(
-            len(runs) > 0
-            and len(failed_tests) == 0
-            and number_of_tests(runs) == len(bug_info["actions_runs"][2][0]["tests"])
+            0
+            if (
+                len(runs) > 0
+                and len(failed_tests) == 0
+                and number_of_tests(runs)
+                == len(bug_info["actions_runs"][2][0]["tests"])
+            )
+            else 1
         )
 
     def __str__(self) -> str:
