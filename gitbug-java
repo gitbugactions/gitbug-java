@@ -8,6 +8,7 @@ import tqdm
 import shutil
 import docker
 import tarfile
+import logging
 import tempfile
 import requests
 
@@ -19,7 +20,8 @@ from gitbug.bug import Bug
 class GitBugJavaCli(object):
     """GitBug-Java CLI"""
 
-    def __init__(self):
+    def __init__(self, verbose: bool = False):
+        self.__init_logging(verbose)
         self.__projects = {}
 
         # Load the GitBug-Java dataset
@@ -34,6 +36,10 @@ class GitBugJavaCli(object):
 
         # Sort the projects by pid
         self.__projects = dict(sorted(self.__projects.items(), key=lambda x: x[0]))
+
+    def __init_logging(self, verbose: bool = False):
+        level = logging.DEBUG if verbose else logging.ERROR
+        logging.basicConfig(format='[%(asctime)s] %(message)s', level=level)
 
     def __setup_base_image(self):
         base_image = f"nunosaavedra/gitbug-actions:setup"
@@ -109,7 +115,7 @@ class GitBugJavaCli(object):
                 for bug in self.__projects[ppid].get_bugs():
                     print(bug.bid)
 
-    def checkout(self, bid: str, work_dir: str, fixed: bool = False):
+    def checkout(self, bid: str, workdir: str, fixed: bool = False):
         """
         Checkout a specific bug in GitBug-Java
         """
@@ -126,14 +132,14 @@ class GitBugJavaCli(object):
             raise ValueError(f"Unknown bug id {bid} for project {pid}")
 
         # Create the workdir if it does not exist
-        os.makedirs(work_dir, exist_ok=True)
+        os.makedirs(workdir, exist_ok=True)
 
         # Make sure the workdir is empty
-        if os.listdir(work_dir):
-            raise ValueError(f"Workdir {work_dir} is not empty")
+        if os.listdir(workdir):
+            raise ValueError(f"Workdir {workdir} is not empty")
 
         # Checkout the bug
-        bug.checkout(work_dir, fixed=fixed)
+        bug.checkout(workdir, fixed=fixed)
 
     def run(self, workdir: str) -> bool:
         """

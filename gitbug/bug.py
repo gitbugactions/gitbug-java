@@ -5,6 +5,7 @@ import json
 import docker
 import pygit2
 import shutil
+import logging
 import subprocess
 
 from pathlib import Path
@@ -30,14 +31,16 @@ class Bug(object):
         self.pid = self.repository.replace("/", "-")
         self.bid = f"{self.repository.replace('/', '-')}-{self.commit_hash[:12]}"
 
-    def __clone_repo(self, work_dir: str) -> pygit2.Repository:
+    def __clone_repo(self, workdir: str) -> pygit2.Repository:
+        logging.debug(f"Cloning {self.clone_url} to {workdir}")
+
         # TODO: deal with parallelism (multiple cli processes running at the same time)
-        repo: pygit2.Repository = pygit2.clone_repository(self.clone_url, work_dir)
+        repo: pygit2.Repository = pygit2.clone_repository(self.clone_url, workdir)
 
         # Set gc.auto to 0 to avoid "too many open files" bug
         subprocess.run(
             f"git config gc.auto 0",
-            cwd=work_dir,
+            cwd=workdir,
             shell=True,
             capture_output=True,
         )
@@ -58,19 +61,23 @@ class Bug(object):
 
     def __checkout_buggy(self, repo: pygit2.Repository) -> None:
         # Checkout the buggy version
+        logging.debug(f"Checking out buggy version of {self.bid}")
         self.__set_commit(repo, self.previous_commit_hash)
 
         # We only apply the non code patch when the bug patch is non-empty
         # Otherwise, we are testing the non code patch alone
         if len(self.non_code_patch) > 0 and len(self.bug_patch) > 0:
+            logging.debug(f"Applying non-code patch")
             repo.apply(pygit2.Diff.parse_diff(str(self.non_code_patch)))
 
         # We apply the test patch when the test patch is non-empty
         if len(self.test_patch) > 0:
+            logging.debug(f"Applying test patch")
             repo.apply(pygit2.Diff.parse_diff(str(self.test_patch)))
 
     def __checkout_fixed(self, repo: pygit2.Repository) -> None:
         # Checkout the fixed version
+        logging.debug(f"Checking out fixed version of {self.bid}")
         self.__set_commit(repo, self.commit_hash)
 
     def checkout(self, workdir: str, fixed: bool = False) -> None:
@@ -78,6 +85,7 @@ class Bug(object):
         Checkout the bug to the given workdir.
         """
         # Clone the repository
+        logging.debug(f"Checking out {self.bid} to {workdir}")
         repo = self.__clone_repo(workdir)
 
         # Checkout the buggy or fixed version
@@ -87,6 +95,7 @@ class Bug(object):
             self.__checkout_buggy(repo)
 
         # Dump bug info to file
+        logging.debug(f"Dumping bug info to {workdir}/gitbug.json")
         with Path(workdir, "gitbug.json").open("w") as f:
             bug_info = self.bug_info
             bug_info["fixed"] = fixed
@@ -123,6 +132,8 @@ class Bug(object):
 
     def run(self, workdir: str) -> bool:
         # Check if the workdir has a bug
+        logging.debug(f"Running {self.bid} in {workdir}")
+
         if not Path(workdir, "gitbug.json").exists():
             raise ValueError(f"Workdir {workdir} does not contain a GitBug-Java bug")
         # Read the bug info from the workdir
@@ -136,6 +147,7 @@ class Bug(object):
         # Run Actions
         act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
+            logging.debug(f"Creating docker image for {self.bid}")
             base_image = f"gitbug-java:base"
             runner_image = f"gitbug-java:{str(uuid.uuid4())}"
 
@@ -155,6 +167,7 @@ class Bug(object):
                 runner_image=runner_image,
             )
 
+            logging.debug(f"Executing GitHub Actions for {self.bid}")
             runs = executor.run_tests(keep_containers=False, offline=True)
             docker_client.images.remove(runner_image, force=True)
         finally:
@@ -169,11 +182,17 @@ class Bug(object):
 
         failed_tests = flat_failed_tests(runs)
 
-        # TODO: print a nice report, save the logs to files, etc.
-        print(failed_tests)
+        print(f"# Executed tests: {number_of_tests(runs)}")
+        print(f"# Passing tests: {number_of_tests(runs) - len(failed_tests)}")
+        print(f"# Failing tests: {len(failed_tests)}")
+
+        if len(failed_tests) > 0:
+            print(f"Failed tests:")
+            for failed_test in failed_tests:
+                print(f"- {failed_test.classname}#{failed_test.name}")
 
         for run in runs:
-            print(run.stdout)
+            logging.debug(run.stdout)
 
         return (
             len(runs) > 0
