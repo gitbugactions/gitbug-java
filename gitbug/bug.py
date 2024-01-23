@@ -1,5 +1,6 @@
 import re
 import os
+import sys
 import uuid
 import json
 import docker
@@ -159,10 +160,8 @@ class Bug(object):
             # If we need to use default github actions, we fetch them from the diff folder
             default_actions = None
             if bug_info["actions_runs"][2][0]["default_actions"]:
-                default_actions = (
-                    self.__get_default_actions(
-                        diff_folder_path, repo, bug.language, runner_image=runner_image
-                    ),
+                default_actions = self.__get_default_actions(
+                    diff_folder_path, repo, bug.language, runner_image=runner_image
                 )
             # TODO: use a hardcoded path to act
             executor = TestExecutor(
@@ -172,7 +171,10 @@ class Bug(object):
                 default_actions=default_actions,
                 runner_image=runner_image,
             )
-            # TODO: remove workflow created for execution
+
+            # Remove the copied workflow so that it does not interfere with future runs
+            if default_actions is not None:
+                Path(default_actions.test_workflows[0].path).unlink(missing_ok=True)
 
             logging.debug(f"Executing GitHub Actions for {self.bid}")
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
@@ -191,9 +193,9 @@ class Bug(object):
 
         failed_tests = flat_failed_tests(runs)
 
-        print(f"# Executed tests: {number_of_tests(runs)}")
-        print(f"# Passing tests: {number_of_tests(runs) - len(failed_tests)}")
-        print(f"# Failing tests: {len(failed_tests)}")
+        print(f"Executed tests: {number_of_tests(runs)}")
+        print(f"Passing tests: {number_of_tests(runs) - len(failed_tests)}")
+        print(f"Failing tests: {len(failed_tests)}")
 
         if len(failed_tests) > 0:
             print(f"Failed tests:")
@@ -207,7 +209,7 @@ class Bug(object):
             f"Expected number of tests: {len(bug_info['actions_runs'][2][0]['tests'])}"
         )
 
-        return (
+        sys.exit(
             len(runs) > 0
             and len(failed_tests) == 0
             and number_of_tests(runs) == len(bug_info["actions_runs"][2][0]["tests"])
