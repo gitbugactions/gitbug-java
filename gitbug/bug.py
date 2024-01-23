@@ -156,14 +156,20 @@ class Bug(object):
                 base_image, runner_image, self.__get_diff_path(diff_folder_path)
             )
 
+            # If we need to use default github actions, we fetch them from the diff folder
+            default_actions = None
+            if bug_info["actions_runs"][2][0]["default_actions"]:
+                default_actions = (
+                    self.__get_default_actions(
+                        diff_folder_path, repo, bug.language, runner_image=runner_image
+                    ),
+                )
             # TODO: use a hardcoded path to act
             executor = TestExecutor(
                 repo_clone=repo,
                 language=bug.language,
                 act_cache_dir=act_cache_dir,
-                default_actions=self.__get_default_actions(
-                    diff_folder_path, repo, bug.language, runner_image=runner_image
-                ),
+                default_actions=default_actions,
                 runner_image=runner_image,
             )
             # TODO: remove workflow created for execution
@@ -197,7 +203,9 @@ class Bug(object):
         for run in runs:
             logging.debug(run.stdout)
 
-        logging.debug(f"Expected number of tests: {len(bug_info['actions_runs'][2][0]['tests'])}")
+        logging.debug(
+            f"Expected number of tests: {len(bug_info['actions_runs'][2][0]['tests'])}"
+        )
 
         return (
             len(runs) > 0
