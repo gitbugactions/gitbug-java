@@ -166,6 +166,7 @@ class Bug(object):
                 ),
                 runner_image=runner_image,
             )
+            # TODO: remove workflow created for execution
 
             logging.debug(f"Executing GitHub Actions for {self.bid}")
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
@@ -196,11 +197,12 @@ class Bug(object):
         for run in runs:
             logging.debug(run.stdout)
 
+        logging.debug(f"Expected number of tests: {len(bug_info['actions_runs'][2][0]['tests'])}")
+
         return (
             len(runs) > 0
             and len(failed_tests) == 0
-            and number_of_tests(runs)
-            > 0  # TODO: check against the number of tests in the bug info
+            and number_of_tests(runs) == len(bug_info["actions_runs"][2][0]["tests"])
         )
 
     def __str__(self) -> str:
