@@ -104,7 +104,8 @@ class Bug(object):
         )
 
         # Remove all workflows
-        for workflow in Path(workdir, ".github", "workflows").glob("*.yml"):
+        workflows_path = Path(workdir, ".github", "workflows")
+        for workflow in workflows_path.glob("*.yml") + workflows_path.glob("*.yaml"):
             workflow.unlink()
         diff_folder_path = Path("data", self.pid, self.commit_hash)
         self.__create_replication_workflow(diff_folder_path, repo)
