@@ -61,6 +61,7 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: Optional[str] = None):
         # Cleanup
         shutil.rmtree(temp_dir, ignore_errors=True)
         shutil.rmtree(output_dir, ignore_errors=True)
+        # TODO remove act_cache if optional
 
 
 def test_run_all():
@@ -87,10 +88,13 @@ def test_run_all_parallel():
     with ThreadPoolExecutor(max_workers=32) as executor:
         futures = []
         # Run all bugs
-        for bug in tqdm.tqdm(bugs):
+        for bug in bugs:
             if bug:
                 futures.append(executor.submit(run_bug, bug, fixed=False))
                 futures.append(executor.submit(run_bug, bug, fixed=True))
 
-        results = [future.result() for future in as_completed(futures)]
+        results = []
+        for future in tqdm.tqdm(as_completed(futures), total=len(futures)):
+            results.append(future.result())
+
         assert all(results)
