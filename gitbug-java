@@ -15,6 +15,7 @@ import requests
 from pathlib import Path
 from gitbug.project import Project
 from gitbug.bug import Bug
+from typing import Optional
 
 
 class GitBugJavaCli(object):
@@ -141,7 +142,7 @@ class GitBugJavaCli(object):
         # Checkout the bug
         bug.checkout(workdir, fixed=fixed)
 
-    def run(self, workdir: str, output: str = "report") -> bool:
+    def run(self, workdir: str, output: str = "report", act_cache_dir: Optional[str] = None) -> bool:
         """
         Run the bug checked-out in workdir
         """
@@ -154,7 +155,7 @@ class GitBugJavaCli(object):
             bug = Bug(bug_info)
 
         # Run the bug
-        return bug.run(workdir, output)
+        return bug.run(workdir, output, act_cache_dir=act_cache_dir)
 
     def setup(self):
         """

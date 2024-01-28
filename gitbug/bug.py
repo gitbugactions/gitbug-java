@@ -10,6 +10,7 @@ import logging
 import subprocess
 
 from pathlib import Path
+from typing import Optional
 
 from gitbugactions.test_executor import TestExecutor
 from gitbugactions.docker.export import create_diff_image
@@ -138,7 +139,9 @@ class Bug(object):
             if path != "workflow":
                 return os.path.join(diff_folder_path, path)
 
-    def run(self, workdir: str, output: str) -> bool:
+    def run(
+        self, workdir: str, output: str, act_cache_dir: Optional[str] = None
+    ) -> bool:
         # Check if the workdir has a bug
         logging.debug(f"Running {self.bid} in {workdir}")
 
@@ -153,7 +156,9 @@ class Bug(object):
         docker_client = docker.from_env()
 
         # Run Actions
-        act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
+        acquire_act_cache = act_cache_dir is None
+        if acquire_act_cache:
+            act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
             logging.debug(f"Creating docker image for {self.bid}")
             base_image = f"gitbug-java:base"
@@ -189,7 +194,8 @@ class Bug(object):
             docker_client.images.remove(runner_image, force=True)
         finally:
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
-            ActCacheDirManager.return_act_cache_dir(act_cache_dir)
+            if acquire_act_cache:
+                ActCacheDirManager.return_act_cache_dir(act_cache_dir)
 
         # Check if the run was successful
         def flat_failed_tests(runs):
@@ -235,8 +241,7 @@ class Bug(object):
             if (
                 len(runs) > 0
                 and len(failed_tests) == 0
-                and number_of_tests(runs)
-                == expected_tests
+                and number_of_tests(runs) == expected_tests
             )
             else 1
         )
