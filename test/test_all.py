@@ -26,7 +26,9 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: Optional[str] = None):
     temp_dir = os.path.join(tempfile.gettempdir(), bid, str(uuid.uuid4()))
     output_dir = os.path.join(temp_dir, "gitbug-java-output", str(uuid.uuid4()))
     if act_cache_dir is None:
-        act_cache_dir = os.path.join(tempfile.gettempdir(), "gitbug-java-act-cache", str(uuid.uuid4()))
+        act_cache_dir = os.path.join(
+            tempfile.gettempdir(), "gitbug-java-act-cache", str(uuid.uuid4())
+        )
 
     try:
         # Checkout the bug and check correctness

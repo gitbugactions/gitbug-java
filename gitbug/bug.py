@@ -103,6 +103,12 @@ class Bug(object):
             capture_output=True,
         )
 
+        # Remove all workflows to force the use of the default workflow
+        # (workflow saved in the replication package)
+        for workflow in os.listdir(os.path.join(workdir, ".github", "workflows")):
+            if workflow.endswith(".yml"):
+                os.remove(os.path.join(workdir, ".github", "workflows", workflow))
+
         # Dump bug info to file
         logging.debug(f"Dumping bug info to {workdir}/gitbug.json")
         with Path(workdir, "gitbug.json").open("w") as f:
@@ -169,12 +175,10 @@ class Bug(object):
                 base_image, runner_image, self.__get_diff_path(diff_folder_path)
             )
 
-            # If we need to use default github actions, we fetch them from the diff folder
-            default_actions = None
-            if bug_info["actions_runs"][2][0]["default_actions"]:
-                default_actions = self.__get_default_actions(
-                    diff_folder_path, repo, bug.language, runner_image=runner_image
-                )
+            # We force the workflow in the replication package to be used
+            default_actions = self.__get_default_actions(
+                diff_folder_path, repo, bug.language, runner_image=runner_image
+            )
             # TODO: use a hardcoded path to act
             executor = TestExecutor(
                 repo_clone=repo,
@@ -185,8 +189,7 @@ class Bug(object):
             )
 
             # Remove the copied workflow so that it does not interfere with future runs
-            if default_actions is not None:
-                Path(default_actions.test_workflows[0].path).unlink(missing_ok=True)
+            Path(default_actions.test_workflows[0].path).unlink(missing_ok=True)
 
             logging.debug(f"Executing GitHub Actions for {self.bid}")
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
