@@ -171,6 +171,7 @@ class Bug(object):
                 repo_clone=repo,
                 language=bug.language,
                 act_cache_dir=act_cache_dir,
+                default_actions=None,
                 runner_image=runner_image,
             )
 
