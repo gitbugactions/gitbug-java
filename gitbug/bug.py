@@ -103,11 +103,11 @@ class Bug(object):
             capture_output=True,
         )
 
-        # Remove all workflows to force the use of the default workflow
-        # (workflow saved in the replication package)
-        for workflow in os.listdir(os.path.join(workdir, ".github", "workflows")):
-            if workflow.endswith(".yml"):
-                os.remove(os.path.join(workdir, ".github", "workflows", workflow))
+        # Remove all workflows
+        for workflow in Path(workdir, ".github", "workflows").glob("*.yml"):
+            workflow.unlink()
+        diff_folder_path = Path("data", self.pid, self.commit_hash)
+        self.__create_replication_workflow(diff_folder_path, repo)
 
         # Dump bug info to file
         logging.debug(f"Dumping bug info to {workdir}/gitbug.json")
@@ -116,9 +116,9 @@ class Bug(object):
             bug_info["fixed"] = fixed
             json.dump(bug_info, f)
 
-    def __get_default_actions(
-        self, diff_folder_path, repo_clone, language, runner_image: str
-    ) -> GitHubActions:
+    def __create_replication_workflow(
+        self, diff_folder_path: str, repo_clone: pygit2.Repository
+    ):
         workflow_dir_path = os.path.join(diff_folder_path, "workflow")
         workflow_name = os.listdir(workflow_dir_path)[0]
         workflow_path = os.path.join(workflow_dir_path, workflow_name)
@@ -130,15 +130,6 @@ class Bug(object):
             github_actions_path, str(uuid.uuid4()) + ".yml"
         )
         shutil.copyfile(workflow_path, new_workflow_path)
-
-        workflows = [GitHubWorkflowFactory.create_workflow(new_workflow_path, language)]
-
-        default_actions = GitHubActions(
-            repo_clone.workdir, language, runner_image=runner_image
-        )
-        default_actions.test_workflows = workflows
-
-        return default_actions
 
     def __get_diff_path(self, diff_folder_path):
         for path in os.listdir(diff_folder_path):
@@ -175,21 +166,13 @@ class Bug(object):
                 base_image, runner_image, self.__get_diff_path(diff_folder_path)
             )
 
-            # We force the workflow in the replication package to be used
-            default_actions = self.__get_default_actions(
-                diff_folder_path, repo, bug.language, runner_image=runner_image
-            )
             # TODO: use a hardcoded path to act
             executor = TestExecutor(
                 repo_clone=repo,
                 language=bug.language,
                 act_cache_dir=act_cache_dir,
-                default_actions=default_actions,
                 runner_image=runner_image,
             )
-
-            # Remove the copied workflow so that it does not interfere with future runs
-            Path(default_actions.test_workflows[0].path).unlink(missing_ok=True)
 
             logging.debug(f"Executing GitHub Actions for {self.bid}")
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
