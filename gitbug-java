@@ -39,7 +39,7 @@ class GitBugJavaCli(object):
 
     def __init_logging(self, verbose: bool = False):
         level = logging.DEBUG if verbose else logging.ERROR
-        logging.basicConfig(format='[%(asctime)s] %(message)s', level=level)
+        logging.basicConfig(format="[%(asctime)s] %(message)s", level=level)
 
     def __setup_base_image(self):
         base_image = f"nunosaavedra/gitbug-actions:setup"
@@ -141,17 +141,20 @@ class GitBugJavaCli(object):
         # Checkout the bug
         bug.checkout(workdir, fixed=fixed)
 
-    def run(self, workdir: str) -> bool:
+    def run(self, workdir: str, output: str = "report") -> bool:
         """
         Run the bug checked-out in workdir
         """
+        if not Path(output).exists():
+            os.makedirs(output)
+
         # Read the bug info from the workdir
         with Path(workdir, "gitbug.json").open("r") as f:
             bug_info = json.load(f)
             bug = Bug(bug_info)
 
         # Run the bug
-        return bug.run(workdir)
+        return bug.run(workdir, output)
 
     def setup(self):
         """

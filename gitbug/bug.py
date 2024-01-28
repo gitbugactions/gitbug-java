@@ -95,6 +95,13 @@ class Bug(object):
         else:
             self.__checkout_buggy(repo)
 
+        subprocess.run(
+            f"git remote set-url origin https://github.com/{self.repository}",
+            cwd=workdir,
+            shell=True,
+            capture_output=True,
+        )
+
         # Dump bug info to file
         logging.debug(f"Dumping bug info to {workdir}/gitbug.json")
         with Path(workdir, "gitbug.json").open("w") as f:
@@ -131,7 +138,7 @@ class Bug(object):
             if path != "workflow":
                 return os.path.join(diff_folder_path, path)
 
-    def run(self, workdir: str) -> bool:
+    def run(self, workdir: str, output: str) -> bool:
         # Check if the workdir has a bug
         logging.debug(f"Running {self.bid} in {workdir}")
 
@@ -192,7 +199,9 @@ class Bug(object):
             return sum(map(lambda act_run: len(act_run.tests), runs))
 
         failed_tests = flat_failed_tests(runs)
+        expected_tests = len(bug_info["actions_runs"][2][0]["tests"])
 
+        print(f"Expected number of tests: {expected_tests}")
         print(f"Executed tests: {number_of_tests(runs)}")
         print(f"Passing tests: {number_of_tests(runs) - len(failed_tests)}")
         print(f"Failing tests: {len(failed_tests)}")
@@ -202,12 +211,24 @@ class Bug(object):
             for failed_test in failed_tests:
                 print(f"- {failed_test.classname}#{failed_test.name}")
 
+        output_path = os.path.join(output, f"{self.bid}.json")
+        with open(output_path, "w") as f:
+            json.dump(
+                {
+                    "expected_tests": expected_tests,
+                    "executed_tests": number_of_tests(runs),
+                    "passed_tests": number_of_tests(runs) - len(failed_tests),
+                    "failed_tests": [
+                        {"classname": test.classname, "name": test.name}
+                        for test in failed_tests
+                    ],
+                },
+                f,
+            )
+        print(f"Report written to {output_path}")
+
         for run in runs:
             logging.debug(run.stdout)
-
-        logging.debug(
-            f"Expected number of tests: {len(bug_info['actions_runs'][2][0]['tests'])}"
-        )
 
         sys.exit(
             0
@@ -215,7 +236,7 @@ class Bug(object):
                 len(runs) > 0
                 and len(failed_tests) == 0
                 and number_of_tests(runs)
-                == len(bug_info["actions_runs"][2][0]["tests"])
+                == expected_tests
             )
             else 1
         )
