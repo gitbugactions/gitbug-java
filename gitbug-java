@@ -14,6 +14,7 @@ import requests
 
 from pathlib import Path
 from gitbug.project import Project
+from gitbugactions.docker.client import DockerClient
 from gitbug.bug import Bug
 from typing import Optional
 
@@ -46,7 +47,7 @@ class GitBugJavaCli(object):
         base_image = f"nunosaavedra/gitbug-actions:setup"
         runner_image = f"gitbug-java:base"
 
-        client = docker.from_env()
+        client = DockerClient.getInstance()
         # Return if image already exists
         if len(client.images.list(name=runner_image)) > 0:
             return
@@ -55,7 +56,6 @@ class GitBugJavaCli(object):
         Path(tmp_dir).mkdir(parents=True, exist_ok=True)
         dockerfile_path = Path(tmp_dir, "Dockerfile")
         with dockerfile_path.open("w") as f:
-            client = docker.from_env()
             dockerfile = f"FROM {base_image}\n"
             # HACK: We set runneradmin to an arbitrarily large uid to avoid conflicts with the host's
             dockerfile += f"RUN sudo usermod -u 4000000 runneradmin\n"
@@ -142,7 +142,9 @@ class GitBugJavaCli(object):
         # Checkout the bug
         bug.checkout(workdir, fixed=fixed)
 
-    def run(self, workdir: str, output: str = "report", act_cache_dir: Optional[str] = None) -> bool:
+    def run(
+        self, workdir: str, output: str = "report", act_cache_dir: Optional[str] = None
+    ) -> bool:
         """
         Run the bug checked-out in workdir
         """

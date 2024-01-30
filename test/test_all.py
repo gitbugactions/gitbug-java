@@ -6,6 +6,7 @@ import json
 import tqdm
 import shutil
 
+from pathlib import Path
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -37,24 +38,32 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: Optional[str] = None):
         )
         if run.returncode != 0:
             print(f"{bid} ({fixed}) failed to checkout")
+            print(run.stdout.decode("utf-8"))
+            print(run.stderr.decode("utf-8"))
             return
 
         # Run the bug and check results
         run = run_command(
             f"gitbug-java run {temp_dir} --act_cache_dir={act_cache_dir} --output={output_dir}"
         )
-
+        if not Path(output_dir, f"{bid}.json").exists():
+            print(f"{bid} ({fixed}) failed to find report")
+            print(run.stdout.decode("utf-8"))
+            print(run.stderr.decode("utf-8"))
+            return False
         with open(os.path.join(output_dir, f"{bid}.json"), "r") as f:
             report = json.loads(f.read())
 
         if fixed and run.returncode != 0:
             print(f"{bid} failed to reproduce fixed version")
+            print(run.stdout.decode("utf-8"))
             return False
         elif not fixed and (
             report["failed_tests"] == 0
             or report["expected_tests"] != report["executed_tests"]
         ):
             print(f"{bid} failed to reproduce buggy version")
+            print(run.stdout.decode("utf-8"))
             return False
         return True
     finally:
@@ -85,7 +94,7 @@ def test_run_all_parallel():
     bugs = run_command("gitbug-java bids").stdout.decode("utf-8").strip().split("\n")
     assert len(bugs) == 200
 
-    with ThreadPoolExecutor(max_workers=32) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor:
         futures = []
         # Run all bugs
         for bug in bugs:

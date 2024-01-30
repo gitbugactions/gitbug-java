@@ -14,6 +14,7 @@ from typing import Optional
 
 from gitbugactions.test_executor import TestExecutor
 from gitbugactions.docker.export import create_diff_image
+from gitbugactions.docker.client import DockerClient
 from gitbugactions.actions.workflow import GitHubWorkflowFactory
 from gitbugactions.actions.actions import ActCacheDirManager, GitHubActions
 
@@ -154,7 +155,7 @@ class Bug(object):
             bug = Bug(bug_info)
 
         repo = pygit2.Repository(Path(workdir, ".git"))
-        docker_client = docker.from_env()
+        docker_client = DockerClient.getInstance()
 
         # Run Actions
         acquire_act_cache = act_cache_dir is None
@@ -225,7 +226,9 @@ class Bug(object):
         print(f"Report written to {output_path}")
 
         for run in runs:
-            logging.debug(run.stdout)
+            print(run.stdout)
+            print(run.stderr)
+            # logging.debug(run.stdout)
 
         sys.exit(
             0
