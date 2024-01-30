@@ -143,7 +143,11 @@ class GitBugJavaCli(object):
         bug.checkout(workdir, fixed=fixed)
 
     def run(
-        self, workdir: str, output: str = "report", act_cache_dir: Optional[str] = None
+        self,
+        workdir: str,
+        output: str = "report",
+        act_cache_dir: Optional[str] = None,
+        timeout: int = 0,
     ) -> bool:
         """
         Run the bug checked-out in workdir
@@ -157,7 +161,7 @@ class GitBugJavaCli(object):
             bug = Bug(bug_info)
 
         # Run the bug
-        return bug.run(workdir, output, act_cache_dir=act_cache_dir)
+        return bug.run(workdir, output, act_cache_dir=act_cache_dir, timeout=timeout)
 
     def setup(self):
         """

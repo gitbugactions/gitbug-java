@@ -142,7 +142,11 @@ class Bug(object):
                 return os.path.join(diff_folder_path, path)
 
     def run(
-        self, workdir: str, output: str, act_cache_dir: Optional[str] = None
+        self,
+        workdir: str,
+        output: str,
+        act_cache_dir: Optional[str] = None,
+        timeout: int = 0,
     ) -> bool:
         # Check if the workdir has a bug
         logging.debug(f"Running {self.bid} in {workdir}")
@@ -182,7 +186,9 @@ class Bug(object):
 
             logging.debug(f"Executing GitHub Actions for {self.bid}")
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
-            runs = executor.run_tests(keep_containers=False, offline=True)
+            runs = executor.run_tests(
+                keep_containers=False, offline=True, timeout=timeout
+            )
             docker_client.images.remove(runner_image, force=True)
         finally:
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)

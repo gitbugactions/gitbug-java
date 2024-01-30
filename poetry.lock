@@ -360,13 +360,13 @@ files = [
 
 [[package]]
 name = "gitbugactions"
-version = "2.0.2"
+version = "2.0.3"
 description = "A tool that builds bug-fix benchmarks by leveraging GitHub Actions."
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "gitbugactions-2.0.2-py3-none-any.whl", hash = "sha256:c166ca61f04176dabd728444dac211ea916e1631c57a15ba5fbfa94078b23251"},
-    {file = "gitbugactions-2.0.2.tar.gz", hash = "sha256:e4c4e8738cf7b74cfdf820c29d1576444d9fe85b200e9eee40a2288583bf5491"},
+    {file = "gitbugactions-2.0.3-py3-none-any.whl", hash = "sha256:e697f271db5fcf02b7088b18e93ab7f765b8eddbe11fdd69b95fd9298c2750e0"},
+    {file = "gitbugactions-2.0.3.tar.gz", hash = "sha256:8d9e1eae2d3f48f22fb95c333b171a9dd18dca89ffbb2a3c2518c996078e51bc"},
 ]
 
 [package.dependencies]
@@ -1158,4 +1158,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "358428e144fc76819bf19ae80154db313700e19ed2aa121f334723fc509ac144"
+content-hash = "f02cbf1ded2558c0cd215a8b42f49d9763844e2c3c78135dfe8fd07e65a32fe8"
