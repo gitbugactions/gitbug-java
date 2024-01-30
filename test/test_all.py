@@ -22,14 +22,10 @@ def test_help():
     assert run_command("gitbug-java -h").returncode == 0
 
 
-def run_bug(bid: str, fixed: bool, act_cache_dir: Optional[str] = None):
+def run_bug(bid: str, fixed: bool, act_cache_dir: str = "./act-cache"):
     # Setup temporary directory
     temp_dir = os.path.join(tempfile.gettempdir(), bid, str(uuid.uuid4()))
     output_dir = os.path.join(temp_dir, "gitbug-java-output", str(uuid.uuid4()))
-    if act_cache_dir is None:
-        act_cache_dir = os.path.join(
-            tempfile.gettempdir(), "gitbug-java-act-cache", str(uuid.uuid4())
-        )
 
     try:
         # Checkout the bug and check correctness
@@ -70,7 +66,6 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: Optional[str] = None):
         # Cleanup
         shutil.rmtree(temp_dir, ignore_errors=True)
         shutil.rmtree(output_dir, ignore_errors=True)
-        # TODO remove act_cache if optional
 
 
 def test_run_all():
