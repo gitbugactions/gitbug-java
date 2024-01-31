@@ -184,11 +184,11 @@ class GitBugJavaCli(object):
         # TODO: check if exports are already downloaded
         self.__setup_exports(
             "gitbug-java_offline_environments_1",
-            "https://zenodo.org/records/10288440/files/gitbug-java_offline_environments_1.tar.gz?download=1",
+            "https://zenodo.org/records/10578602/files/gitbug-java_offline_environments_1.tar.gz?download=1",
         )
         self.__setup_exports(
             "gitbug-java_offline_environments_2",
-            "https://zenodo.org/records/10291028/files/gitbug-java_offline_environments_2.tar.gz?download=1",
+            "https://zenodo.org/records/10578617/files/gitbug-java_offline_environments_2.tar.gz?download=1",
         )
         self.__setup_act_cache(
             "act-cache",
