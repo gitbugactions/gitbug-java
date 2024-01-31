@@ -205,15 +205,40 @@ class Bug(object):
         failed_tests = flat_failed_tests(runs)
         expected_tests = len(bug_info["actions_runs"][2][0]["tests"])
 
+        # Print summary of number of tests
         print(f"Expected number of tests: {expected_tests}")
         print(f"Executed tests: {number_of_tests(runs)}")
         print(f"Passing tests: {number_of_tests(runs) - len(failed_tests)}")
         print(f"Failing tests: {len(failed_tests)}")
 
+        # Print failing tests
         if len(failed_tests) > 0:
             print(f"Failed tests:")
             for failed_test in failed_tests:
                 print(f"- {failed_test.classname}#{failed_test.name}")
+
+        # Print missing/unexpected tests
+        if number_of_tests(runs) != expected_tests:
+            executed_tests = set()
+            for run in runs:
+                for test in run.tests:
+                    executed_tests.add(f"{test.classname}#{test.name}")
+
+            expected_tests = set()
+            for test in bug_info["actions_runs"][2][0]["tests"]:
+                expected_tests.add(f"{test['classname']}#{test['name']}")
+
+            missing_tests = expected_tests - executed_tests
+            if len(missing_tests) > 0:
+                print(f"Missing tests:")
+                for missing_test in missing_tests:
+                    print(f"- {missing_test.classname}#{missing_test.name}")
+
+            unexpected_tests = executed_tests - expected_tests
+            if len(unexpected_tests) > 0:
+                print(f"Unexpected tests:")
+                for unexpected_test in unexpected_tests:
+                    print(f"- {unexpected_test.classname}#{unexpected_test.name}")
 
         output_path = os.path.join(output, f"{self.bid}.json")
         with open(output_path, "w") as f:
