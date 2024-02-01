@@ -232,13 +232,13 @@ class Bug(object):
             if len(missing_tests) > 0:
                 print(f"Missing tests:")
                 for missing_test in missing_tests:
-                    print(f"- {missing_test.classname}#{missing_test.name}")
+                    print(f"- {missing_test}")
 
             unexpected_tests = executed_tests - expected_tests
             if len(unexpected_tests) > 0:
                 print(f"Unexpected tests:")
                 for unexpected_test in unexpected_tests:
-                    print(f"- {unexpected_test.classname}#{unexpected_test.name}")
+                    print(f"- {unexpected_test}")
 
         output_path = os.path.join(output, f"{self.bid}.json")
         with open(output_path, "w") as f:
