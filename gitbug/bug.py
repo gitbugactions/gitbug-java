@@ -203,10 +203,10 @@ class Bug(object):
             return sum(map(lambda act_run: len(act_run.tests), runs))
 
         failed_tests = flat_failed_tests(runs)
-        expected_tests = len(bug_info["actions_runs"][2][0]["tests"])
+        num_expected_tests = len(bug_info["actions_runs"][2][0]["tests"])
 
         # Print summary of number of tests
-        print(f"Expected number of tests: {expected_tests}")
+        print(f"Expected number of tests: {num_expected_tests}")
         print(f"Executed tests: {number_of_tests(runs)}")
         print(f"Passing tests: {number_of_tests(runs) - len(failed_tests)}")
         print(f"Failing tests: {len(failed_tests)}")
@@ -218,7 +218,7 @@ class Bug(object):
                 print(f"- {failed_test.classname}#{failed_test.name}")
 
         # Print missing/unexpected tests
-        if number_of_tests(runs) != expected_tests:
+        if number_of_tests(runs) != num_expected_tests:
             executed_tests = set()
             for run in runs:
                 for test in run.tests:
@@ -244,7 +244,7 @@ class Bug(object):
         with open(output_path, "w") as f:
             json.dump(
                 {
-                    "expected_tests": expected_tests,
+                    "expected_tests": num_expected_tests,
                     "executed_tests": number_of_tests(runs),
                     "passed_tests": number_of_tests(runs) - len(failed_tests),
                     "failed_tests": [
@@ -266,7 +266,7 @@ class Bug(object):
             if (
                 len(runs) > 0
                 and len(failed_tests) == 0
-                and number_of_tests(runs) == expected_tests
+                and number_of_tests(runs) == num_expected_tests
             )
             else 1
         )
