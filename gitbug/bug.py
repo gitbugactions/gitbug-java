@@ -3,7 +3,6 @@ import os
 import sys
 import uuid
 import json
-import docker
 import pygit2
 import shutil
 import logging
@@ -15,8 +14,7 @@ from typing import Optional
 from gitbugactions.test_executor import TestExecutor
 from gitbugactions.docker.export import create_diff_image
 from gitbugactions.docker.client import DockerClient
-from gitbugactions.actions.workflow import GitHubWorkflowFactory
-from gitbugactions.actions.actions import ActCacheDirManager, GitHubActions
+from gitbugactions.actions.actions import ActCacheDirManager
 
 
 class Bug(object):
@@ -196,45 +194,71 @@ class Bug(object):
                 ActCacheDirManager.return_act_cache_dir(act_cache_dir)
 
         # Check if the run was successful
+        def flat_executed_tests(runs):
+            return list(
+                filter(
+                    lambda test: test.result != "Skipped",
+                    sum(map(lambda act_run: act_run.tests, runs), []),
+                )
+            )
+
+        def flat_skipped_tests(runs):
+            return list(
+                filter(
+                    lambda test: test.result == "Skipped",
+                    sum(map(lambda act_run: act_run.tests, runs), []),
+                )
+            )
+
         def flat_failed_tests(runs):
             return sum(map(lambda act_run: act_run.failed_tests, runs), [])
 
-        def number_of_tests(runs):
-            return sum(map(lambda act_run: len(act_run.tests), runs))
-
+        executed_tests = flat_executed_tests(runs)
+        skipped_tests = flat_skipped_tests(runs)
         failed_tests = flat_failed_tests(runs)
-        num_expected_tests = len(bug_info["actions_runs"][2][0]["tests"])
+
+        num_executed_tests = len(executed_tests)
+        num_skipped_tests = len(skipped_tests)
+        num_failed_tests = len(failed_tests)
+
+        expected_executed_tests = [
+            test
+            for test in bug_info["actions_runs"][2][0]["tests"]
+            if test["results"] != "Skipped"
+        ]
+        num_expected_executed_tests = len(expected_executed_tests)
 
         # Print summary of number of tests
-        print(f"Expected number of tests: {num_expected_tests}")
-        print(f"Executed tests: {number_of_tests(runs)}")
-        print(f"Passing tests: {number_of_tests(runs) - len(failed_tests)}")
-        print(f"Failing tests: {len(failed_tests)}")
+        print(f"Expected executed tests: {num_expected_executed_tests}")
+        print(f"Executed tests: {num_executed_tests}")
+        print(f"Passing tests: {num_executed_tests - num_failed_tests}")
+        print(f"Skipped tests: {num_skipped_tests}")
+        print(f"Failing tests: {num_failed_tests}")
 
         # Print failing tests
-        if len(failed_tests) > 0:
+        if num_failed_tests > 0:
             print(f"Failed tests:")
             for failed_test in failed_tests:
                 print(f"- {failed_test.classname}#{failed_test.name}")
 
         # Print missing/unexpected tests
-        if number_of_tests(runs) != num_expected_tests:
-            executed_tests = set()
+        if num_executed_tests != num_expected_executed_tests:
+            executed_tests_names = set()
             for run in runs:
                 for test in run.tests:
-                    executed_tests.add(f"{test.classname}#{test.name}")
+                    executed_tests_names.add(f"{test.classname}#{test.name}")
 
-            expected_tests = set()
-            for test in bug_info["actions_runs"][2][0]["tests"]:
-                expected_tests.add(f"{test['classname']}#{test['name']}")
+            expected_tests_names = set()
+            for test in expected_executed_tests:
+                expected_tests_names.add(f"{test['classname']}#{test['name']}")
 
-            missing_tests = expected_tests - executed_tests
+            missing_tests = expected_tests_names - executed_tests_names
             if len(missing_tests) > 0:
                 print(f"Missing tests:")
                 for missing_test in missing_tests:
                     print(f"- {missing_test}")
 
-            unexpected_tests = executed_tests - expected_tests
+            unexpected_tests = executed_tests_names - expected_tests_names
             if len(unexpected_tests) > 0:
                 print(f"Unexpected tests:")
                 for unexpected_test in unexpected_tests:
@@ -244,9 +268,9 @@ class Bug(object):
         with open(output_path, "w") as f:
             json.dump(
                 {
-                    "expected_tests": num_expected_tests,
-                    "executed_tests": number_of_tests(runs),
-                    "passed_tests": number_of_tests(runs) - len(failed_tests),
+                    "expected_tests": num_expected_executed_tests,
+                    "executed_tests": num_executed_tests,
+                    "passed_tests": num_executed_tests - num_failed_tests,
                     "failed_tests": [
                         {"classname": test.classname, "name": test.name}
                         for test in failed_tests
@@ -256,17 +280,17 @@ class Bug(object):
             )
         print(f"Report written to {output_path}")
 
-        for run in runs:
-            print(run.stdout)
-            print(run.stderr)
-            # logging.debug(run.stdout)
+        # for run in runs:
+        #     print(run.stdout)
+        #     print(run.stderr)
+        #     # logging.debug(run.stdout)
 
         sys.exit(
             0
             if (
                 len(runs) > 0
                 and len(failed_tests) == 0
-                and number_of_tests(runs) == num_expected_tests
+                and num_executed_tests == num_expected_executed_tests
             )
             else 1
         )
