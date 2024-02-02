@@ -9,12 +9,14 @@ import logging
 import subprocess
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
+from junitparser import Skipped
 
 from gitbugactions.test_executor import TestExecutor
 from gitbugactions.docker.export import create_diff_image
 from gitbugactions.docker.client import DockerClient
 from gitbugactions.actions.actions import ActCacheDirManager
+from gitbugactions.actions.actions import ActTestsRun
 
 
 class Bug(object):
@@ -194,18 +196,22 @@ class Bug(object):
                 ActCacheDirManager.return_act_cache_dir(act_cache_dir)
 
         # Check if the run was successful
-        def flat_executed_tests(runs):
+        def flat_executed_tests(runs: List[ActTestsRun]):
             return list(
                 filter(
-                    lambda test: test.result != "Skipped",
+                    lambda test: all(
+                        map(lambda r: not isinstance(r, Skipped), test.result)
+                    ),
                     sum(map(lambda act_run: act_run.tests, runs), []),
                 )
             )
 
-        def flat_skipped_tests(runs):
+        def flat_skipped_tests(runs: List[ActTestsRun]):
             return list(
                 filter(
-                    lambda test: test.result == "Skipped",
+                    lambda test: any(
+                        map(lambda r: isinstance(r, Skipped), test.result)
+                    ),
                     sum(map(lambda act_run: act_run.tests, runs), []),
                 )
             )
@@ -224,7 +230,7 @@ class Bug(object):
         expected_executed_tests = [
             test
             for test in bug_info["actions_runs"][2][0]["tests"]
-            if test["results"] != "Skipped"
+            if test["results"][0]["result"] != "Skipped"
         ]
         num_expected_executed_tests = len(expected_executed_tests)
 
