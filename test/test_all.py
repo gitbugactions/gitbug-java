@@ -67,23 +67,6 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: str = "./act-cache"):
         shutil.rmtree(temp_dir, ignore_errors=True)
         shutil.rmtree(output_dir, ignore_errors=True)
 
-
-def test_run_all():
-    # Get list of all bugs
-    bugs = run_command("gitbug-java bids").stdout.decode("utf-8").strip().split("\n")
-
-    assert len(bugs) == 199
-
-    results = []
-    # Run all bugs
-    for bug in tqdm.tqdm(bugs):
-        if bug:
-            results.append(run_bug(bug, fixed=False))
-            results.append(run_bug(bug, fixed=True))
-
-    assert all(results)
-
-
 def test_run_all_parallel():
     # Get list of all bugs
     bugs = run_command("gitbug-java bids").stdout.decode("utf-8").strip().split("\n")
