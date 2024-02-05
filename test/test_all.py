@@ -72,7 +72,7 @@ def test_run_all():
     # Get list of all bugs
     bugs = run_command("gitbug-java bids").stdout.decode("utf-8").strip().split("\n")
 
-    assert len(bugs) == 200
+    assert len(bugs) == 199
 
     results = []
     # Run all bugs
@@ -87,7 +87,7 @@ def test_run_all():
 def test_run_all_parallel():
     # Get list of all bugs
     bugs = run_command("gitbug-java bids").stdout.decode("utf-8").strip().split("\n")
-    assert len(bugs) == 200
+    assert len(bugs) == 199
 
     with ThreadPoolExecutor(max_workers=8) as executor:
         futures = []
