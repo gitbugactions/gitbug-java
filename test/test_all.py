@@ -7,7 +7,6 @@ import tqdm
 import shutil
 
 from pathlib import Path
-from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -55,7 +54,7 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: str = "./act-cache"):
             print(run.stdout.decode("utf-8"))
             return False
         elif not fixed and (
-            report["failed_tests"] == 0
+            report["failing_tests"] == 0
             or report["expected_tests"] != report["executed_tests"]
         ):
             print(f"{bid} failed to reproduce buggy version")
@@ -66,6 +65,7 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: str = "./act-cache"):
         # Cleanup
         shutil.rmtree(temp_dir, ignore_errors=True)
         shutil.rmtree(output_dir, ignore_errors=True)
+
 
 def test_run_all_parallel():
     # Get list of all bugs

@@ -15,8 +15,10 @@ from junitparser import Skipped
 from gitbugactions.test_executor import TestExecutor
 from gitbugactions.docker.export import create_diff_image
 from gitbugactions.docker.client import DockerClient
-from gitbugactions.actions.actions import ActCacheDirManager
+from gitbugactions.actions.actions import ActCacheDirManager, Act
 from gitbugactions.actions.actions import ActTestsRun
+
+from gitbug.util import get_project_root
 
 
 class Bug(object):
@@ -111,7 +113,7 @@ class Bug(object):
         )
         for workflow in workflows:
             workflow.unlink()
-        diff_folder_path = Path("data", self.pid, self.commit_hash)
+        diff_folder_path = Path(get_project_root(), "data", self.pid, self.commit_hash)
         self.__create_replication_workflow(diff_folder_path, repo)
 
         # Dump bug info to file
@@ -170,12 +172,15 @@ class Bug(object):
             base_image = f"gitbug-java:base"
             runner_image = f"gitbug-java:{str(uuid.uuid4())}"
 
-            diff_folder_path = Path("data", self.pid, self.commit_hash)
+            diff_folder_path = Path(
+                get_project_root(), "data", self.pid, self.commit_hash
+            )
             create_diff_image(
                 base_image, runner_image, self.__get_diff_path(diff_folder_path)
             )
 
-            # TODO: use a hardcoded path to act
+            # Define path of Act
+            Act._ACT__ACT_PATH = os.path.join(get_project_root(), "bin", "act")
             executor = TestExecutor(
                 repo_clone=repo,
                 language=bug.language,
@@ -248,6 +253,7 @@ class Bug(object):
                 print(f"- {failed_test.classname}#{failed_test.name}")
 
         # Print missing/unexpected tests
+        unexpected_tests, missing_tests = set(), set()
         if num_executed_tests != num_expected_executed_tests:
             executed_tests_names = set()
             for run in runs:
@@ -276,7 +282,11 @@ class Bug(object):
                 {
                     "expected_tests": num_expected_executed_tests,
                     "executed_tests": num_executed_tests,
-                    "passed_tests": num_executed_tests - num_failed_tests,
+                    "skipped_tests": num_skipped_tests,
+                    "passing_tests": num_executed_tests - num_failed_tests,
+                    "failing_tests": num_failed_tests,
+                    "unexpected_tests": list(unexpected_tests),
+                    "missing_tests": list(missing_tests),
                     "failed_tests": [
                         {"classname": test.classname, "name": test.name}
                         for test in failed_tests
@@ -286,10 +296,9 @@ class Bug(object):
             )
         print(f"Report written to {output_path}")
 
-        # for run in runs:
-        #     print(run.stdout)
-        #     print(run.stderr)
-        #     # logging.debug(run.stdout)
+        for run in runs:
+            logging.debug(run.stdout)
+            logging.debug(run.stderr)
 
         sys.exit(
             0

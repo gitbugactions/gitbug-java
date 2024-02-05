@@ -16,6 +16,7 @@ from pathlib import Path
 from gitbug.project import Project
 from gitbugactions.docker.client import DockerClient
 from gitbug.bug import Bug
+from gitbug.bug import get_project_root
 from typing import Optional
 
 
@@ -27,7 +28,7 @@ class GitBugJavaCli(object):
         self.__projects = {}
 
         # Load the GitBug-Java dataset
-        for project_file in Path("data", "bugs").glob("*.json"):
+        for project_file in Path(get_project_root(), "data", "bugs").glob("*.json"):
             with project_file.open("r") as f:
                 pid = project_file.stem
                 project = Project(pid)
@@ -88,15 +89,16 @@ class GitBugJavaCli(object):
                         f.write(chunk)
 
     def __setup_exports(self, name: str, download_url: str):
-        gitbug = Path("data", f"{name}.tar.gz")
+        gitbug = Path(get_project_root(), "data", f"{name}.tar.gz")
         if not gitbug.exists():
             self.__download(download_url, gitbug)
         # Extract the dataset
         with tarfile.open(gitbug) as tar:
             tar.extractall("data")
 
-        source = f"data/{name}"
-        shutil.copytree(source, "data/", dirs_exist_ok=True)
+        data_dir = Path(get_project_root(), "data")
+        source = os.path.join(data_dir, f"{name}")
+        shutil.copytree(source, data_dir, dirs_exist_ok=True)
         shutil.rmtree(source)
         os.remove(gitbug)
 
@@ -178,8 +180,8 @@ class GitBugJavaCli(object):
         """
         Setup the GitBug-Java dataset
         """
-        if not os.path.exists("data"):
-            os.makedirs("data")
+        if not os.path.exists(os.path.join(get_project_root(), "data")):
+            os.makedirs(os.path.join(get_project_root(), "data"))
         self.__setup_base_image()
         # TODO: check if exports are already downloaded
         self.__setup_exports(
