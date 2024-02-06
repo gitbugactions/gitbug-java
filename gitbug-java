@@ -93,11 +93,10 @@ class GitBugJavaCli(object):
         if not gitbug.exists():
             self.__download(download_url, gitbug)
         # Extract the dataset
-        with tarfile.open(gitbug) as tar:
-            tar.extractall("data")
-
         data_dir = Path(get_project_root(), "data")
         source = os.path.join(data_dir, f"{name}")
+        with tarfile.open(gitbug) as tar:
+            tar.extractall(source)
         shutil.copytree(source, data_dir, dirs_exist_ok=True)
         shutil.rmtree(source)
         os.remove(gitbug)
@@ -108,10 +107,12 @@ class GitBugJavaCli(object):
         if not act_cache.exists():
             self.__download(download_url, act_cache)
         # Extract the zip
-        Path("./act-cache").mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(f"{name}.zip", "r") as zip_ref:
-            zip_ref.extractall("./act-cache")
-        os.remove(f"{name}.zip")
+        zip_path = Path(get_project_root(), "act-cache.zip")
+        cache_path = Path(get_project_root(), "act-cache")
+        cache_path.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(cache_path)
+        os.remove(zip_path)
 
     def pids(self):
         """
