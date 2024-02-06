@@ -103,11 +103,10 @@ class GitBugJavaCli(object):
 
     def __setup_act_cache(self, name: str, download_url: str):
         # Download the zip
-        act_cache = Path(f"{name}.zip")
-        if not act_cache.exists():
-            self.__download(download_url, act_cache)
-        # Extract the zip
         zip_path = Path(get_project_root(), "act-cache.zip")
+        if not act_cache.exists():
+            self.__download(download_url, zip_path)
+        # Extract the zip
         cache_path = Path(get_project_root(), "act-cache")
         cache_path.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
@@ -160,7 +159,7 @@ class GitBugJavaCli(object):
         self,
         workdir: str,
         output: str = "report",
-        act_cache_dir: Optional[str] = "./act-cache",
+        act_cache_dir: Optional[str] = f"{get_project_root()}/act-cache",
         timeout: int = 0,
     ) -> bool:
         """
