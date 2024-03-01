@@ -14,7 +14,7 @@ Requirements:
 1. Setup Python environment
 ```bash
 poetry shell
-poetry install
+poetry install --no-root
 ```
 
 2. Add GitBug-Java and custom Act version to path
