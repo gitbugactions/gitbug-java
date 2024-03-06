@@ -103,11 +103,11 @@ class GitBugJavaCli(object):
 
     def __setup_act_cache(self, name: str, download_url: str):
         # Download the zip
-        zip_path = Path(get_project_root(), "act-cache.zip")
-        if not act_cache.exists():
+        zip_path = Path(get_project_root(), f"{name}.zip")
+        if not zip_path.exists():
             self.__download(download_url, zip_path)
         # Extract the zip
-        cache_path = Path(get_project_root(), "act-cache")
+        cache_path = Path(get_project_root(), name)
         cache_path.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(cache_path)
