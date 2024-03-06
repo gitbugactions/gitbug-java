@@ -41,7 +41,7 @@ gitbug-java bids [-p=PID]
 
 3. Checkout bug-fix
 ```bash
-gitbug-java checkout PID BID WORK_DIR [--fixed]
+gitbug-java checkout BID WORK_DIR [--fixed]
 ```
 
 4. Run Actions
