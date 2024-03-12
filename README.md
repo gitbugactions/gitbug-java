@@ -27,6 +27,8 @@ export PATH="$(pwd):$(pwd)/bin:$PATH"
 gitbug-java setup
 ```
 
+**NOTE: Ensure that all `gitbug-java` commands are executed without using `sudo` to guarantee correct functionality.**
+
 ## Use GitBug-Java
 
 1. List all available project ids
@@ -49,6 +51,15 @@ gitbug-java checkout BID WORK_DIR [--fixed]
 gitbug-java run WORK_DIR
 ```
 
-## Contents of GitBug-Java
+## Citation
 
-Please refer to the paper
+If you use GitBug-Java in your research work, please cite [GitBug-Java: A Reproducible Benchmark of Recent Java Bugs](https://arxiv.org/pdf/2402.02961.pdf)
+
+```bibtex
+@inproceedings{gitbugjava,
+  title={GitBug-Java: A Reproducible Benchmark of Recent Java Bugs},
+  author={Silva, Andr{\'e} and Saavedra, Nuno and Monperrus, Martin},
+  booktitle={Proceedings of the 21st International Conference on Mining Software Repositories},
+  doi={10.1145/3643991.3644884}
+}
+```
