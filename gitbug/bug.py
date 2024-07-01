@@ -310,5 +310,26 @@ class Bug(object):
             else 1
         )
 
+    def info(self) -> str:
+        return f"""
+### Bug ID
+{self.bid}
+
+### Bug Patch
+```diff
+{self.bug_patch}
+```
+
+### Non-Code Patch
+```diff
+{self.non_code_patch}
+```
+
+### Test Patch
+```diff
+{self.test_patch}
+```
+"""
+
     def __str__(self) -> str:
         return self.bid
