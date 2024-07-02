@@ -129,6 +129,24 @@ class GitBugJavaCli(object):
                 for bug in self.__projects[ppid].get_bugs():
                     print(bug.bid)
 
+    def info(self, bid: str):
+        """
+        Get information about a specific bug in GitBug-Java
+        """
+        # Split bid on the last occurence of "-"
+        pid, _ = bid.rsplit("-", 1)
+
+        # Check the pid and bid exist
+        if pid not in self.__projects:
+            raise ValueError(f"Unknown project id {pid}")
+
+        project = self.__projects[pid]
+        bug = project.get_bug(bid)
+        if bug is None:
+            raise ValueError(f"Unknown bug id {bid} for project {pid}")
+
+        print(bug.info())
+
     def checkout(self, bid: str, workdir: str, fixed: bool = False):
         """
         Checkout a specific bug in GitBug-Java

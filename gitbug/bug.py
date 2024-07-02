@@ -310,5 +310,36 @@ class Bug(object):
             else 1
         )
 
+    def info(self) -> str:
+        i = 0 if self.strategy == "FAIL_PASS" else 1
+        failing_tests = [
+            test
+            for test in self.actions_runs[i][0]["tests"]
+            if test["results"][0]["result"] == "Failure"
+        ]
+
+        return f"""
+### Bug ID
+{self.bid}
+
+### Bug Patch
+```diff
+{self.bug_patch}
+```
+
+### Non-Code Patch
+```diff
+{self.non_code_patch}
+```
+
+### Test Patch
+```diff
+{self.test_patch}
+```
+
+### Failing Tests
+{"".join(f"- {test['classname']}#{test['name']}\n\t- {test["results"][0]['type']}\n\t- {test["results"][0]['message']}" for test in failing_tests)}
+"""
+
     def __str__(self) -> str:
         return self.bid
