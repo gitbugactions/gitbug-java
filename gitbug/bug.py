@@ -57,12 +57,12 @@ class Bug(object):
         repo.checkout_tree(commit)
         repo.create_tag(
             str(uuid.uuid4()),
-            commit.oid,
-            pygit2.GIT_OBJ_COMMIT,
+            commit.id,
+            pygit2.GIT_OBJECT_COMMIT,
             commit.author,
             commit.message,
         )
-        repo.set_head(commit.oid)
+        repo.set_head(commit.id)
 
     def __checkout_buggy(self, repo: pygit2.Repository) -> None:
         # Checkout the buggy version
