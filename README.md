@@ -10,7 +10,7 @@ Requirements:
 - Python (Recommended 3.11)
 - Poetry (Recommended 1.8 and higher)
 - Docker (v20 or higher)
-- If you are on Ubuntu/Debian, choose a system with GLIBC 2.32 or 2.34 as some of the dependencies require these versions (A docker image wouldn't be suitable as it would require DinD). 
+- If you are on Ubuntu/Debian, choose a system with GLIBC 2.32 or 2.34 as some of the dependencies require these versions (A docker image would not be suitable as it would require DinD). 
 
   For example you can create a virtual machine of ubuntu 21.10 (glibc 2.32). Here is a quick setup of an ubuntu VM:
   - Install multipass (allows to quickly create ubuntu VMs and works on Linux/Mac/Windows). Follow instructions here: https://multipass.run/docs/install-multipass.
