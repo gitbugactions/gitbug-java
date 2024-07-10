@@ -24,7 +24,7 @@ Requirements:
     ```
   - install docker within the image and add the user to the docker group
 
-Once the above requirements are satisfied within your system or the created VM machine, clone this repository and execute the following steps:
+Once the above requirements are satisfied within your system or the VM machine is created, clone this repository and execute the following steps:
 
 1. Setup Python environment
     ```bash
