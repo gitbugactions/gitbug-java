@@ -22,7 +22,7 @@ Requirements:
     ```bash
     multipass shell VM-NAME-PRINTED-LAST-STEP
     ```
-  - install docker within the image and the user to the docker group
+  - install docker within the image and add the user to the docker group
 
 Once the above requirements are satisfied within your system or the created VM machine, clone this repository and execute the following steps:
 
