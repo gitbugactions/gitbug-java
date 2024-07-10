@@ -32,9 +32,9 @@ Once the above requirements are satisfied within your system or the VM machine i
     poetry install --no-root
     ```
 
-    **Note:** Poetry shell will attempt to create a new virtual environement. 
-    However, if you are already inside a virtual environement, poetry will use the that environement.
-    In such case, the subsequent commands would only work with a Python3.11 environement.
+    **Note:** Poetry shell will attempt to create a new virtual environment. 
+    However, if you are already inside a virtual environment, poetry will use the that environment.
+    In such case, the subsequent commands would only work with a Python3.11 environment.
 
 2. Add GitBug-Java and custom Act version to path
     ```bash
