@@ -338,8 +338,8 @@ class Bug(object):
 ```
 
 ### Failing Tests
-{"".join(f"- {test['classname']}#{test['name']}\n\t- {test["results"][0]['type']}\n\t- {test["results"][0]['message']}" for test in failing_tests)}
-"""
+""" + "\n".join(f"- {test['classname']}#{test['name']}\n\t-  {test['results'][0]['type']}\n\t- {test['results'][0]['message']}" for test in failing_tests)
+
 
     def __str__(self) -> str:
         return self.bid
