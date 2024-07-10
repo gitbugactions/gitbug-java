@@ -42,7 +42,7 @@ Once the above requirements are satisfied within your system or the VM machine i
     ```
     **Note:** The above command needs to be executed on every new shell instance
     
-3. Run Setup (Installs Docker Image ~50GiB, downloads required dependencies ~80GiB).The downloadable data size is around 130GB. However, after unzipping files, the space taken would go up to 240GB (it will go down after deleting zipped files).
+3. Run Setup (Installs Docker Image ~50GiB, downloads required dependencies ~80GiB). The downloadable data size is around 130GB. However, after unzipping files, the space taken goes up to 240GB (it goes down after deleting the zipped files).
     ```bash
     gitbug-java setup
     ```
