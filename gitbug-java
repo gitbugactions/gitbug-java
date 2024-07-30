@@ -176,13 +176,13 @@ class GitBugJavaCli(object):
     def run(
         self,
         workdir: str,
-        output: str = "report",
         act_cache_dir: Optional[str] = f"{get_project_root()}/act-cache",
         timeout: int = 0,
     ) -> bool:
         """
         Run the bug checked-out in workdir
         """
+        output = Path(workdir, ".gitbug-java")
         if not Path(output).exists():
             os.makedirs(output)
 

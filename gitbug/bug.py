@@ -291,6 +291,14 @@ class Bug(object):
                         {"classname": test.classname, "name": test.name}
                         for test in failed_tests
                     ],
+                    "run_outputs": [
+                        {
+                            "workflow_name": run.workflow_name,
+                            "stdout": run.stdout,
+                            "stderr": run.stderr,
+                        }
+                        for run in runs
+                    ],
                 },
                 f,
             )
