@@ -276,7 +276,7 @@ class Bug(object):
                 for unexpected_test in unexpected_tests:
                     print(f"- {unexpected_test}")
 
-        output_path = os.path.join(output, f"{self.bid}.json")
+        output_path = os.path.join(output, f"test-results.json")
         with open(output_path, "w") as f:
             json.dump(
                 {
@@ -290,6 +290,14 @@ class Bug(object):
                     "failed_tests": [
                         {"classname": test.classname, "name": test.name}
                         for test in failed_tests
+                    ],
+                    "run_outputs": [
+                        {
+                            "workflow_name": run.workflow_name,
+                            "stdout": run.stdout,
+                            "stderr": run.stderr,
+                        }
+                        for run in runs
                     ],
                 },
                 f,
