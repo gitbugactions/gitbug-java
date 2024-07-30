@@ -48,8 +48,40 @@ gitbug-java checkout BID WORK_DIR [--fixed]
 
 4. Run Actions
 ```bash
-gitbug-java run WORK_DIR
+gitbug-java run WORKDIR [--act_cache_dir=ACT_CACHE_DIR | --timeout=TIMEOUT]
 ```
+
+A verbose mode is also available with the option `-v` or `--verbose`.
+
+## Obtain parsed test execution results
+
+The parsed test execution results are stored, after executing the `gitbug-java run` command, under `${WORKDIR}/.gitbug-java/test-results.json`
+The file includes the following information:
+```json
+{
+    "expected_tests": num_expected_executed_tests,
+    "executed_tests": num_executed_tests,
+    "skipped_tests": num_skipped_tests,
+    "passing_tests": num_executed_tests - num_failed_tests,
+    "failing_tests": num_failed_tests,
+    "unexpected_tests": list(unexpected_tests),
+    "missing_tests": list(missing_tests),
+    "failed_tests": [
+        {"classname": test.classname, "name": test.name}
+        for test in failed_tests
+    ],
+    "run_outputs": [
+        {
+            "workflow_name": run.workflow_name,
+            "stdout": run.stdout,
+            "stderr": run.stderr,
+        }
+        for run in runs
+    ],
+}
+```
+
+Note: Our output includes information from the entire GitHub Action run, including the stack-trace from the test run but also the output from other steps in the executed workflows. This is different from benchmarks such as Defects4J that provide only the test execution stack-trace segregated from other outputs. Currently, we do not support extracting only the test execution stack-trace.
 
 ## Citation
 
