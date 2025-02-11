@@ -101,16 +101,14 @@ class GitBugJavaCli(object):
         shutil.rmtree(source)
         os.remove(gitbug)
 
-    def __setup_act_cache(self, name: str, download_url: str):
+    def __setup_act_cache(self, download_url: str):
         # Download the zip
-        zip_path = Path(get_project_root(), f"{name}.zip")
+        zip_path = Path(get_project_root(), "act-cache.zip")
         if not zip_path.exists():
             self.__download(download_url, zip_path)
         # Extract the zip
-        cache_path = Path(get_project_root(), name)
-        cache_path.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(cache_path)
+            zip_ref.extractall(get_project_root())
         os.remove(zip_path)
 
     def pids(self):
@@ -211,7 +209,6 @@ class GitBugJavaCli(object):
             "https://zenodo.org/records/10578617/files/gitbug-java_offline_environments_2.tar.gz?download=1",
         )
         self.__setup_act_cache(
-            "act-cache",
             "https://zenodo.org/records/10592626/files/act-cache.zip?download=1",
         )
 
