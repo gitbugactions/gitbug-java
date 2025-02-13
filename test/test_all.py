@@ -23,8 +23,8 @@ def test_help():
 
 def run_bug(bid: str, fixed: bool, act_cache_dir: str = "./act-cache"):
     # Setup temporary directory
-    temp_dir = os.path.join(tempfile.gettempdir(), bid, str(uuid.uuid4()))
-    output_dir = os.path.join(temp_dir, "gitbug-java-output", str(uuid.uuid4()))
+    temp_dir = Path(tempfile.gettempdir(), bid, str(uuid.uuid4()))
+    output_dir = Path(temp_dir, ".gitbug-java")
 
     try:
         # Checkout the bug and check correctness
@@ -38,15 +38,14 @@ def run_bug(bid: str, fixed: bool, act_cache_dir: str = "./act-cache"):
             return
 
         # Run the bug and check results
-        run = run_command(
-            f"gitbug-java run {temp_dir} --act_cache_dir={act_cache_dir} --output={output_dir}"
-        )
-        if not Path(output_dir, f"{bid}.json").exists():
+        run = run_command(f"gitbug-java run {temp_dir} --act_cache_dir={act_cache_dir}")
+        test_results_path = Path(output_dir, "test-results.json")
+        if not test_results_path.exists():
             print(f"{bid} ({fixed}) failed to find report")
             print(run.stdout.decode("utf-8"))
             print(run.stderr.decode("utf-8"))
             return False
-        with open(os.path.join(output_dir, f"{bid}.json"), "r") as f:
+        with open(test_results_path, "r") as f:
             report = json.loads(f.read())
 
         if fixed and run.returncode != 0:
