@@ -26,6 +26,8 @@ class GitBugJavaCli(object):
     def __init__(self, verbose: bool = False):
         self.__init_logging(verbose)
         self.__projects = {}
+        self.__gitbugactions_base_image = "ghcr.io/catthehacker/ubuntu:runner-latest"
+        self.__gitbugjava_base_image = "gitbug-java:base-act-latest"
 
         # Load the GitBug-Java dataset
         for project_file in Path(get_project_root(), "data", "bugs").glob("*.json"):
@@ -45,27 +47,27 @@ class GitBugJavaCli(object):
         logging.basicConfig(format="[%(asctime)s] %(message)s", level=level)
 
     def __setup_base_image(self):
-        base_image = f"nunosaavedra/gitbug-actions:setup"
-        runner_image = f"gitbug-java:base"
 
         client = DockerClient.getInstance()
         # Return if image already exists
-        if len(client.images.list(name=runner_image)) > 0:
-            return
+        # if len(client.images.list(name=self.__gitbugjava_base_image)) > 0:
+        #     return
 
         tmp_dir = tempfile.mkdtemp()
         Path(tmp_dir).mkdir(parents=True, exist_ok=True)
         dockerfile_path = Path(tmp_dir, "Dockerfile")
         with dockerfile_path.open("w") as f:
-            dockerfile = f"FROM {base_image}\n"
+            dockerfile = f"FROM {self.__gitbugactions_base_image}\n"
             # HACK: We set runneradmin to an arbitrarily large uid to avoid conflicts with the host's
             dockerfile += f"RUN sudo usermod -u 4000000 runneradmin\n"
             dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
             dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
             dockerfile += f"RUN sudo usermod -o -u {os.getuid()} runner\n"
+            dockerfile += f"RUN sudo apt update\n"
+            dockerfile += f"RUN sudo apt install maven -y\n"
             f.write(dockerfile)
 
-        client.images.build(path=tmp_dir, tag=runner_image, forcerm=True)
+        client.images.build(path=tmp_dir, tag=self.__gitbugjava_base_image, forcerm=True)
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def __download(self, url: str, filename: str):
@@ -190,7 +192,7 @@ class GitBugJavaCli(object):
             bug = Bug(bug_info)
 
         # Run the bug
-        return bug.run(workdir, output, act_cache_dir=act_cache_dir, timeout=timeout)
+        return bug.run(workdir, output, act_cache_dir=act_cache_dir, timeout=timeout, base_image=self.__gitbugjava_base_image)
 
     def setup(self):
         """
@@ -200,17 +202,17 @@ class GitBugJavaCli(object):
             os.makedirs(os.path.join(get_project_root(), "data"))
         self.__setup_base_image()
         # TODO: check if exports are already downloaded
-        self.__setup_exports(
-            "gitbug-java_offline_environments_1",
-            "https://zenodo.org/records/10578602/files/gitbug-java_offline_environments_1.tar.gz?download=1",
-        )
-        self.__setup_exports(
-            "gitbug-java_offline_environments_2",
-            "https://zenodo.org/records/10578617/files/gitbug-java_offline_environments_2.tar.gz?download=1",
-        )
-        self.__setup_act_cache(
-            "https://zenodo.org/records/10592626/files/act-cache.zip?download=1",
-        )
+        # self.__setup_exports(
+        #     "gitbug-java_offline_environments_1",
+        #     "https://zenodo.org/records/10578602/files/gitbug-java_offline_environments_1.tar.gz?download=1",
+        # )
+        # self.__setup_exports(
+        #     "gitbug-java_offline_environments_2",
+        #     "https://zenodo.org/records/10578617/files/gitbug-java_offline_environments_2.tar.gz?download=1",
+        # )
+        # self.__setup_act_cache(
+        #     "https://zenodo.org/records/10592626/files/act-cache.zip?download=1",
+        # )
 
 
 def main():
