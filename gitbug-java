@@ -27,7 +27,7 @@ class GitBugJavaCli(object):
         self.__init_logging(verbose)
         self.__projects = {}
         self.__gitbugactions_base_image = "andre15silva/gitbug-actions:act-latest"
-        self.__gitbugjava_base_image = "gitbug-java:base-act-latest"
+        self.__gitbugjava_base_image = "andre15silva/gitbug-java:base-act-latest"
 
         # Load the GitBug-Java dataset
         for project_file in Path(get_project_root(), "data", "bugs").glob("*.json"):
@@ -50,8 +50,8 @@ class GitBugJavaCli(object):
 
         client = DockerClient.getInstance()
         # Return if image already exists
-        # if len(client.images.list(name=self.__gitbugjava_base_image)) > 0:
-        #     return
+        if len(client.images.list(name=self.__gitbugjava_base_image)) > 0:
+            return
 
         tmp_dir = tempfile.mkdtemp()
         Path(tmp_dir).mkdir(parents=True, exist_ok=True)
