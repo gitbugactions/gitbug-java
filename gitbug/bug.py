@@ -192,7 +192,7 @@ class Bug(object):
             logging.debug(f"Executing GitHub Actions for {self.bid}")
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
             runs = executor.run_tests(
-                keep_containers=False, offline=True, timeout=timeout
+                keep_containers=False, offline=False, timeout=timeout
             )
             docker_client.images.remove(runner_image, force=True)
         finally:

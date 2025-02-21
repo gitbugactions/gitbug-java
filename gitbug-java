@@ -26,7 +26,7 @@ class GitBugJavaCli(object):
     def __init__(self, verbose: bool = False):
         self.__init_logging(verbose)
         self.__projects = {}
-        self.__gitbugactions_base_image = "ghcr.io/catthehacker/ubuntu:runner-latest"
+        self.__gitbugactions_base_image = "andre15silva/gitbug-actions:act-latest"
         self.__gitbugjava_base_image = "gitbug-java:base-act-latest"
 
         # Load the GitBug-Java dataset
@@ -56,13 +56,14 @@ class GitBugJavaCli(object):
         tmp_dir = tempfile.mkdtemp()
         Path(tmp_dir).mkdir(parents=True, exist_ok=True)
         dockerfile_path = Path(tmp_dir, "Dockerfile")
+        # FIXME: This should be done once, and the image pulled if needed
         with dockerfile_path.open("w") as f:
             dockerfile = f"FROM {self.__gitbugactions_base_image}\n"
             # HACK: We set runneradmin to an arbitrarily large uid to avoid conflicts with the host's
-            dockerfile += f"RUN sudo usermod -u 4000000 runneradmin\n"
-            dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
-            dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
-            dockerfile += f"RUN sudo usermod -o -u {os.getuid()} runner\n"
+            # dockerfile += f"RUN sudo usermod -u 4000000 runneradmin\n"
+            # dockerfile += f"RUN sudo groupadd -o -g {os.getgid()} {grp.getgrgid(os.getgid()).gr_name}\n"
+            # dockerfile += f"RUN sudo usermod -G {os.getgid()} runner\n"
+            # dockerfile += f"RUN sudo usermod -o -u {os.getuid()} runner\n"
             dockerfile += f"RUN sudo apt update\n"
             dockerfile += f"RUN sudo apt install maven -y\n"
             f.write(dockerfile)
