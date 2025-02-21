@@ -5,6 +5,7 @@ description = "A Reproducible Java Benchmark of Recent Bugs"
 authors = ["André Silva <andreans@kth.se>", "Nuno Saavedra <nuno.saavedra@tecnico.ulisboa.pt>"]
 license = "MIT License"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"

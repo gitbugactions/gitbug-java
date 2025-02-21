@@ -21,7 +21,7 @@ If you use GitBug-Java in your research work, please cite [GitBug-Java: A Reprod
 
 Requirements:
 - Python (Recommended 3.11)
-- Poetry (Recommended 1.8 and higher)
+- Poetry (Recommended 2.0 and higher)
 - Docker (v20 or higher)
 - If you are on Ubuntu/Debian, choose a system with GLIBC 2.32 or 2.34 as some of the dependencies require these versions (A docker image would not be suitable as it would require DinD). 
 
