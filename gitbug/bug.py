@@ -33,8 +33,8 @@ class Bug(object):
             "https://github.com/gitbugactions/",
             self.clone_url,
         )
-        self.pid = self.repository.replace("/", "-")
-        self.bid = f"{self.repository.replace('/', '-')}-{self.commit_hash[:12]}"
+        self.pid = self.repository.replace("/", "-").lower()
+        self.bid = f"{self.pid}-{self.commit_hash[:12]}"
 
     def __clone_repo(self, workdir: str) -> pygit2.Repository:
         logging.debug(f"Cloning {self.clone_url} to {workdir}")

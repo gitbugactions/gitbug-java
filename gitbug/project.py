@@ -4,7 +4,7 @@ from typing import Optional
 
 class Project(object):
     def __init__(self, pid: str) -> None:
-        self.pid = pid
+        self.pid = pid.lower()
         self.bugs = {}
 
     def add_bug(self, bug: Bug) -> None:

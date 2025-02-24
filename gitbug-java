@@ -47,7 +47,6 @@ class GitBugJavaCli(object):
         logging.basicConfig(format="[%(asctime)s] %(message)s", level=level)
 
     def __setup_base_image(self):
-
         client = DockerClient.getInstance()
         # Return if image already exists
         if len(client.images.list(name=self.__gitbugjava_base_image)) > 0:
@@ -68,7 +67,9 @@ class GitBugJavaCli(object):
             dockerfile += f"RUN sudo apt install maven -y\n"
             f.write(dockerfile)
 
-        client.images.build(path=tmp_dir, tag=self.__gitbugjava_base_image, forcerm=True)
+        client.images.build(
+            path=tmp_dir, tag=self.__gitbugjava_base_image, forcerm=True
+        )
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def __download(self, url: str, filename: str):
@@ -193,7 +194,13 @@ class GitBugJavaCli(object):
             bug = Bug(bug_info)
 
         # Run the bug
-        return bug.run(workdir, output, act_cache_dir=act_cache_dir, timeout=timeout, base_image=self.__gitbugjava_base_image)
+        return bug.run(
+            workdir,
+            output,
+            act_cache_dir=act_cache_dir,
+            timeout=timeout,
+            base_image=self.__gitbugjava_base_image,
+        )
 
     def setup(self):
         """
