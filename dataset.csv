@@ -84,9 +84,6 @@ authme-configme-7bf10c513479,repair,gitbugjava.eval.x86_64.authme-configme-7bf10
 authme-configme-aa91a6b315ec,repair,gitbugjava.eval.x86_64.authme-configme-aa91a6b315ec:msbench-0.0.0
 bindambc-whatsapp-business-java-api-362caf5eb33c,repair,gitbugjava.eval.x86_64.bindambc-whatsapp-business-java-api-362caf5eb33c:msbench-0.0.0
 bindambc-whatsapp-business-java-api-fd321cb63437,repair,gitbugjava.eval.x86_64.bindambc-whatsapp-business-java-api-fd321cb63437:msbench-0.0.0
-brightspots-rcv-688920f27706,repair,gitbugjava.eval.x86_64.brightspots-rcv-688920f27706:msbench-0.0.0
-brightspots-rcv-c80e6272c83a,repair,gitbugjava.eval.x86_64.brightspots-rcv-c80e6272c83a:msbench-0.0.0
-brightspots-rcv-076f75e2417a,repair,gitbugjava.eval.x86_64.brightspots-rcv-076f75e2417a:msbench-0.0.0
 enigmatis-graphql-java-annotations-183752ce8b9a,repair,gitbugjava.eval.x86_64.enigmatis-graphql-java-annotations-183752ce8b9a:msbench-0.0.0
 gosimplellc-nbvcxz-ee8d5c62f4fb,repair,gitbugjava.eval.x86_64.gosimplellc-nbvcxz-ee8d5c62f4fb:msbench-0.0.0
 ibm-jsonata4java-1485a41ccf50,repair,gitbugjava.eval.x86_64.ibm-jsonata4java-1485a41ccf50:msbench-0.0.0
@@ -157,12 +154,6 @@ jhy-jsoup-6ccd158754e2,repair,gitbugjava.eval.x86_64.jhy-jsoup-6ccd158754e2:msbe
 jhy-jsoup-1657e8fd6588,repair,gitbugjava.eval.x86_64.jhy-jsoup-1657e8fd6588:msbench-0.0.0
 jhy-jsoup-2a4a9cf83dea,repair,gitbugjava.eval.x86_64.jhy-jsoup-2a4a9cf83dea:msbench-0.0.0
 jhy-jsoup-d126488db626,repair,gitbugjava.eval.x86_64.jhy-jsoup-d126488db626:msbench-0.0.0
-jitterted-ensembler-60ec3bf0273b,repair,gitbugjava.eval.x86_64.jitterted-ensembler-60ec3bf0273b:msbench-0.0.0
-jitterted-ensembler-14a39138787f,repair,gitbugjava.eval.x86_64.jitterted-ensembler-14a39138787f:msbench-0.0.0
-jitterted-ensembler-6207c9d46460,repair,gitbugjava.eval.x86_64.jitterted-ensembler-6207c9d46460:msbench-0.0.0
-jitterted-ensembler-0e512e5b3677,repair,gitbugjava.eval.x86_64.jitterted-ensembler-0e512e5b3677:msbench-0.0.0
-jitterted-ensembler-c9faf3fba524,repair,gitbugjava.eval.x86_64.jitterted-ensembler-c9faf3fba524:msbench-0.0.0
-jitterted-ensembler-0963194c9ebc,repair,gitbugjava.eval.x86_64.jitterted-ensembler-0963194c9ebc:msbench-0.0.0
 klausbrunner-solarpositioning-79c0044373b4,repair,gitbugjava.eval.x86_64.klausbrunner-solarpositioning-79c0044373b4:msbench-0.0.0
 klausbrunner-solarpositioning-4d35aecb4840,repair,gitbugjava.eval.x86_64.klausbrunner-solarpositioning-4d35aecb4840:msbench-0.0.0
 mthmulders-mcs-12a39786d753,repair,gitbugjava.eval.x86_64.mthmulders-mcs-12a39786d753:msbench-0.0.0
@@ -176,10 +167,6 @@ semver4j-semver4j-10102b374298,repair,gitbugjava.eval.x86_64.semver4j-semver4j-1
 semver4j-semver4j-de7dadc7ece6,repair,gitbugjava.eval.x86_64.semver4j-semver4j-de7dadc7ece6:msbench-0.0.0
 semver4j-semver4j-beb7e5d466c7,repair,gitbugjava.eval.x86_64.semver4j-semver4j-beb7e5d466c7:msbench-0.0.0
 slub-urnlib-106be8d1b804,repair,gitbugjava.eval.x86_64.slub-urnlib-106be8d1b804:msbench-0.0.0
-snowflakedb-snowflake-jdbc-f2c8eba73535,repair,gitbugjava.eval.x86_64.snowflakedb-snowflake-jdbc-f2c8eba73535:msbench-0.0.0
-snowflakedb-snowflake-jdbc-002bc9bb528a,repair,gitbugjava.eval.x86_64.snowflakedb-snowflake-jdbc-002bc9bb528a:msbench-0.0.0
-snowflakedb-snowflake-jdbc-7444f58c2aef,repair,gitbugjava.eval.x86_64.snowflakedb-snowflake-jdbc-7444f58c2aef:msbench-0.0.0
-snowflakedb-snowflake-jdbc-15a45aca6bcd,repair,gitbugjava.eval.x86_64.snowflakedb-snowflake-jdbc-15a45aca6bcd:msbench-0.0.0
 spring-projects-spring-guice-ce15b8e5802a,repair,gitbugjava.eval.x86_64.spring-projects-spring-guice-ce15b8e5802a:msbench-0.0.0
 spring-projects-spring-retry-e6091f790c64,repair,gitbugjava.eval.x86_64.spring-projects-spring-retry-e6091f790c64:msbench-0.0.0
 spring-projects-spring-retry-c89b9516d976,repair,gitbugjava.eval.x86_64.spring-projects-spring-retry-c89b9516d976:msbench-0.0.0
