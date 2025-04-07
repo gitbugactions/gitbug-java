@@ -91,7 +91,7 @@ for json_file in bugs_dir.glob("*.json"):
             instance_id = f"{pid}-{bid}".lower()
 
             # Create image tag
-            image_tag = f"gitbugjava.eval.x86_64.{instance_id}:msbench-0.0.0"
+            image_tag = f"gitbugjava.eval.x86_64.{instance_id}:msbench-0.0.1"
 
             # Add entry
             entries.append(

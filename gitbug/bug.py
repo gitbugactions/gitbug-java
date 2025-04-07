@@ -123,6 +123,21 @@ class Bug(object):
             bug_info["fixed"] = fixed
             json.dump(bug_info, f)
 
+        # Make sure repository is not in detached HEAD state
+        # by adding and commiting changes
+        subprocess.run(
+            "git add .",
+            cwd=workdir,
+            shell=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            f"git commit -m 'checkout {self.bid}'",
+            cwd=workdir,
+            shell=True,
+            capture_output=True,
+        )
+
     def __create_replication_workflow(
         self, diff_folder_path: str, repo_clone: pygit2.Repository
     ):
