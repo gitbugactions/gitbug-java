@@ -26,7 +26,7 @@ class GitBugJavaCli(object):
     def __init__(self, verbose: bool = False):
         self.__init_logging(verbose)
         self.__projects = {}
-        self.__gitbugactions_base_image = "andre15silva/gitbug-actions:act-latest"
+        self.__gitbugactions_base_image = "andre15silva/gitbug-actions:runner-latest"
         self.__gitbugjava_base_image = "andre15silva/gitbug-java:base-act-latest"
 
         # Load the GitBug-Java dataset
