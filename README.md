@@ -49,7 +49,7 @@ Once the above requirements are satisfied within your system or the VM machine i
     However, if you are already inside a virtual environment, poetry will use the that environment.
     In such case, the subsequent commands would only work with a Python3.11 environment.
 
-2. Add GitBug-Java and custom Act version to path
+2. Add GitBug-Java and [custom Act version](https://github.com/gitbugactions/act) to path
     ```bash
     export PATH="$(pwd):$(pwd)/bin:$PATH"
     ```
