@@ -149,6 +149,7 @@ class Bug(object):
         output: str,
         act_cache_dir: Optional[str] = None,
         timeout: int = 0,
+        base_image: str = "gitbug-java:base",
     ) -> bool:
         # Check if the workdir has a bug
         logging.debug(f"Running {self.bid} in {workdir}")
@@ -169,7 +170,6 @@ class Bug(object):
             act_cache_dir = ActCacheDirManager.acquire_act_cache_dir()
         try:
             logging.debug(f"Creating docker image for {self.bid}")
-            base_image = f"gitbug-java:base"
             runner_image = f"gitbug-java:{str(uuid.uuid4())}"
 
             diff_folder_path = Path(

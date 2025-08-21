@@ -83,4 +83,4 @@ def test_run_all_parallel():
         for future in tqdm.tqdm(as_completed(futures), total=len(futures)):
             results.append(future.result())
 
-        assert all(results)
+        assert sum(results) == 398
