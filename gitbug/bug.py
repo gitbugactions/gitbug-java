@@ -136,7 +136,20 @@ class Bug(object):
         new_workflow_path = os.path.join(
             github_actions_path, str(uuid.uuid4()) + ".yml"
         )
-        shutil.copyfile(workflow_path, new_workflow_path)
+        
+        # Read workflow and sanitize any old tokens (fixes #9)
+        with open(workflow_path, "r") as f:
+            workflow_content = f.read()
+        
+        # Remove any GITHUB_TOKEN or PAT references that may be expired
+        workflow_content = re.sub(
+            r'\$\{\{\s*secrets\.(GITHUB_TOKEN|PAT|PERSONAL_ACCESS_TOKEN)\s*\}\}',
+            '${{ secrets.GITHUB_TOKEN }}',
+            workflow_content
+        )
+        
+        with open(new_workflow_path, "w") as f:
+            f.write(workflow_content)
 
     def __get_diff_path(self, diff_folder_path):
         for path in os.listdir(diff_folder_path):
@@ -180,7 +193,14 @@ class Bug(object):
             )
 
             # Define path of Act
-            Act._ACT__ACT_PATH = os.path.join(get_project_root(), "bin", "act")
+            act_path = os.path.join(get_project_root(), "bin", "act")
+            if not os.path.exists(act_path):
+                raise RuntimeError(
+                    f"Act is not correctly installed. The 'act' binary was not found at {act_path}.\n"
+                    f"Please run 'gitbug-java setup' to download and install the required dependencies.\n"
+                    f"If the issue persists, ensure Docker is running and try running setup again."
+                )
+            Act._ACT__ACT_PATH = act_path
             executor = TestExecutor(
                 repo_clone=repo,
                 language=bug.language,
@@ -197,6 +217,10 @@ class Bug(object):
             docker_client.images.remove(runner_image, force=True)
         finally:
             shutil.rmtree(Path(workdir, ".act-result"), ignore_errors=True)
+            # Clean up GitHub workflows directory (fixes #10)
+            workflows_dir = Path(workdir, ".github", "workflows")
+            if workflows_dir.exists():
+                shutil.rmtree(workflows_dir, ignore_errors=True)
             if acquire_act_cache:
                 ActCacheDirManager.return_act_cache_dir(act_cache_dir)
 

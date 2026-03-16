@@ -96,7 +96,7 @@ class GitBugJavaCli(object):
         data_dir = Path(get_project_root(), "data")
         source = os.path.join(data_dir, f"{name}")
         with tarfile.open(gitbug) as tar:
-            tar.extractall(source)
+            tar.extractall(source, filter='data')
         shutil.copytree(source, data_dir, dirs_exist_ok=True)
         shutil.rmtree(source)
         os.remove(gitbug)
@@ -174,7 +174,7 @@ class GitBugJavaCli(object):
     def run(
         self,
         workdir: str,
-        act_cache_dir: Optional[str] = f"{get_project_root()}/act-cache",
+        act_cache_dir: Optional[str] = None,
         timeout: int = 0,
         output: Optional[str] = None,
     ) -> bool:
@@ -183,10 +183,12 @@ class GitBugJavaCli(object):
         
         Args:
             workdir: Directory containing the checked-out bug
-            act_cache_dir: Directory containing act cache (optional)
+            act_cache_dir: Directory containing act cache (optional, defaults to {project_root}/act-cache)
             timeout: Timeout in seconds (0 for no timeout)
             output: Output directory for test results (optional, defaults to {workdir}/.gitbug-java)
         """
+        if act_cache_dir is None:
+            act_cache_dir = os.path.join(get_project_root(), "act-cache")
         if output is None:
             output = Path(workdir, ".gitbug-java")
         else:
