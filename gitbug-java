@@ -10,6 +10,7 @@ import tarfile
 import logging
 import zipfile
 import tempfile
+import hashlib
 import requests
 
 from pathlib import Path
@@ -18,6 +19,15 @@ from gitbugactions.docker.client import DockerClient
 from gitbug.bug import Bug
 from gitbug.bug import get_project_root
 from typing import Optional
+
+
+# Expected MD5 checksums for downloaded files (from Zenodo)
+# Update these hashes by running: gitbug-java verify-hashes
+EXPECTED_MD5_HASHES = {
+    "gitbug-java_offline_environments_1.tar.gz": None,  # TODO: populate from Zenodo
+    "gitbug-java_offline_environments_2.tar.gz": None,  # TODO: populate from Zenodo
+    "act-cache.zip": None,  # TODO: populate from Zenodo
+}
 
 
 class GitBugJavaCli(object):
@@ -69,6 +79,7 @@ class GitBugJavaCli(object):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def __download(self, url: str, filename: str):
+        md5_hash = hashlib.md5()
         with open(filename, "wb") as f:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
@@ -87,6 +98,27 @@ class GitBugJavaCli(object):
                     for chunk in r.iter_content(chunk_size=8192):
                         pb.update(len(chunk))
                         f.write(chunk)
+                        md5_hash.update(chunk)
+
+        # Verify MD5 checksum if known
+        basename = os.path.basename(filename)
+        expected_hash = EXPECTED_MD5_HASHES.get(basename)
+        actual_hash = md5_hash.hexdigest()
+        if expected_hash is not None:
+            if actual_hash != expected_hash:
+                logging.warning(
+                    f"MD5 checksum mismatch for {basename}!\n"
+                    f"  Expected: {expected_hash}\n"
+                    f"  Actual:   {actual_hash}\n"
+                    f"The downloaded file may be corrupted or tampered with."
+                )
+            else:
+                logging.info(f"MD5 checksum verified for {basename}: {actual_hash}")
+        else:
+            logging.info(
+                f"MD5 checksum for {basename}: {actual_hash} "
+                f"(no expected hash configured; update EXPECTED_MD5_HASHES to enable verification)"
+            )
 
     def __setup_exports(self, name: str, download_url: str):
         gitbug = Path(get_project_root(), "data", f"{name}.tar.gz")
@@ -223,6 +255,40 @@ class GitBugJavaCli(object):
         self.__setup_act_cache(
             "https://zenodo.org/records/10592626/files/act-cache.zip?download=1",
         )
+
+    def verify_hashes(self):
+        """
+        Compute and display MD5 hashes for downloaded dataset files.
+        Use this to update EXPECTED_MD5_HASHES in the source code.
+        """
+        files_to_check = [
+            (
+                "gitbug-java_offline_environments_1.tar.gz",
+                os.path.join(get_project_root(), "data", "gitbug-java_offline_environments_1.tar.gz"),
+            ),
+            (
+                "gitbug-java_offline_environments_2.tar.gz",
+                os.path.join(get_project_root(), "data", "gitbug-java_offline_environments_2.tar.gz"),
+            ),
+            (
+                "act-cache.zip",
+                os.path.join(get_project_root(), "act-cache.zip"),
+            ),
+        ]
+
+        print("MD5 Hashes for downloaded files:")
+        print("=" * 60)
+        for name, path in files_to_check:
+            if os.path.exists(path):
+                md5_hash = hashlib.md5()
+                with open(path, "rb") as f:
+                    for chunk in iter(lambda: f.read(8192), b""):
+                        md5_hash.update(chunk)
+                print(f'    "{name}": "{md5_hash.hexdigest()}",')
+            else:
+                print(f'    "{name}": None,  # file not found')
+        print("=" * 60)
+        print("Copy these values into EXPECTED_MD5_HASHES in gitbug-java")
 
 
 def main():
