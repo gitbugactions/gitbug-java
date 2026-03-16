@@ -239,8 +239,16 @@ class Bug(object):
         ]
         num_expected_executed_tests = len(expected_executed_tests)
 
+        expected_skipped_tests = [
+            test
+            for test in bug_info["actions_runs"][2][0]["tests"]
+            if test["results"][0]["result"] == "Skipped"
+        ]
+        num_expected_skipped_tests = len(expected_skipped_tests)
+
         # Print summary of number of tests
         print(f"Expected executed tests: {num_expected_executed_tests}")
+        print(f"Expected skipped tests: {num_expected_skipped_tests}")
         print(f"Executed tests: {num_executed_tests}")
         print(f"Passing tests: {num_executed_tests - num_failed_tests}")
         print(f"Skipped tests: {num_skipped_tests}")
@@ -314,6 +322,7 @@ class Bug(object):
                 len(runs) > 0
                 and len(failed_tests) == 0
                 and num_executed_tests == num_expected_executed_tests
+                and num_skipped_tests == num_expected_skipped_tests
             )
             else 1
         )
