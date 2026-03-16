@@ -22,12 +22,24 @@ from typing import Optional
 
 
 # Expected MD5 checksums for downloaded files (from Zenodo)
-# Update these hashes by running: gitbug-java verify-hashes
-EXPECTED_MD5_HASHES = {
-    "gitbug-java_offline_environments_1.tar.gz": None,  # TODO: populate from Zenodo
-    "gitbug-java_offline_environments_2.tar.gz": None,  # TODO: populate from Zenodo
-    "act-cache.zip": None,  # TODO: populate from Zenodo
-}
+# These are loaded from md5-hashes.json if it exists
+# Update these hashes by running: gitbug-java verify-hashes --update
+EXPECTED_MD5_HASHES = {}
+
+
+def _load_expected_hashes():
+    """Load expected MD5 hashes from the JSON hash file."""
+    global EXPECTED_MD5_HASHES
+    hash_file = os.path.join(get_project_root(), "md5-hashes.json")
+    if os.path.exists(hash_file):
+        try:
+            with open(hash_file, "r") as f:
+                EXPECTED_MD5_HASHES = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            logging.warning(f"Failed to load hash file {hash_file}")
+
+
+_load_expected_hashes()
 
 
 class GitBugJavaCli(object):
@@ -51,8 +63,12 @@ class GitBugJavaCli(object):
         self.__projects = dict(sorted(self.__projects.items(), key=lambda x: x[0]))
 
     def __init_logging(self, verbose: bool = False):
-        level = logging.DEBUG if verbose else logging.ERROR
-        logging.basicConfig(format="[%(asctime)s] %(message)s", level=level)
+        level = logging.DEBUG if verbose else logging.WARNING
+        logging.basicConfig(
+            format="[%(asctime)s] [%(levelname)s] %(message)s",
+            level=level,
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
 
     def __setup_base_image(self):
         base_image = f"nunosaavedra/gitbug-actions:setup"
@@ -256,10 +272,25 @@ class GitBugJavaCli(object):
             "https://zenodo.org/records/10592626/files/act-cache.zip?download=1",
         )
 
-    def verify_hashes(self):
+    def clear_cache(self):
+        """
+        Clear the repository clone cache to free disk space.
+        Cached clones are used to speed up checkout operations.
+        """
+        cache_dir = os.path.join(get_project_root(), ".cache", "repos")
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)
+            print(f"Cleared repository cache at {cache_dir}")
+        else:
+            print("No repository cache found")
+
+    def verify_hashes(self, update: bool = False):
         """
         Compute and display MD5 hashes for downloaded dataset files.
-        Use this to update EXPECTED_MD5_HASHES in the source code.
+        
+        Args:
+            update: If True, write the computed hashes to md5-hashes.json
+                    for future verification during downloads.
         """
         files_to_check = [
             (
@@ -276,6 +307,7 @@ class GitBugJavaCli(object):
             ),
         ]
 
+        computed_hashes = {}
         print("MD5 Hashes for downloaded files:")
         print("=" * 60)
         for name, path in files_to_check:
@@ -284,11 +316,27 @@ class GitBugJavaCli(object):
                 with open(path, "rb") as f:
                     for chunk in iter(lambda: f.read(8192), b""):
                         md5_hash.update(chunk)
-                print(f'    "{name}": "{md5_hash.hexdigest()}",')
+                hex_digest = md5_hash.hexdigest()
+                computed_hashes[name] = hex_digest
+                print(f"  {name}: {hex_digest}")
             else:
-                print(f'    "{name}": None,  # file not found')
+                print(f"  {name}: (file not found)")
         print("=" * 60)
-        print("Copy these values into EXPECTED_MD5_HASHES in gitbug-java")
+
+        if update and computed_hashes:
+            hash_file = os.path.join(get_project_root(), "md5-hashes.json")
+            # Merge with existing hashes
+            existing = {}
+            if os.path.exists(hash_file):
+                with open(hash_file, "r") as f:
+                    existing = json.load(f)
+            existing.update(computed_hashes)
+            with open(hash_file, "w") as f:
+                json.dump(existing, f, indent=2)
+            print(f"Hashes written to {hash_file}")
+            print("Future downloads will be verified against these hashes.")
+        elif not update:
+            print("To save these hashes, run: gitbug-java verify-hashes --update=True")
 
 
 def main():

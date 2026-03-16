@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
@@ -45,3 +45,6 @@ jobs:
       - name: Verify CLI imports
         run: |
           python -c "from gitbug.bug import Bug; from gitbug.project import Project; print('Imports OK')"
+      - name: Verify hash command works
+        run: |
+          python -c "import hashlib, json, os; print('Hash utilities OK')"

@@ -36,11 +36,39 @@ class Bug(object):
         self.pid = self.repository.replace("/", "-")
         self.bid = f"{self.repository.replace('/', '-')}-{self.commit_hash[:12]}"
 
+    def __get_cache_dir(self) -> str:
+        """Get the cache directory for bare repository clones."""
+        cache_dir = os.path.join(get_project_root(), ".cache", "repos")
+        os.makedirs(cache_dir, exist_ok=True)
+        return cache_dir
+
+    def __get_cached_repo_path(self) -> str:
+        """Get the path to the cached bare repository for this project."""
+        return os.path.join(self.__get_cache_dir(), self.pid)
+
     def __clone_repo(self, workdir: str) -> pygit2.Repository:
         logging.debug(f"Cloning {self.clone_url} to {workdir}")
 
-        # TODO: deal with parallelism (multiple cli processes running at the same time)
-        repo: pygit2.Repository = pygit2.clone_repository(self.clone_url, workdir)
+        cached_repo_path = self.__get_cached_repo_path()
+
+        if os.path.exists(cached_repo_path):
+            # Clone from cached bare repository (much faster)
+            logging.debug(f"Using cached repository at {cached_repo_path}")
+            repo: pygit2.Repository = pygit2.clone_repository(
+                cached_repo_path, workdir, bare=False
+            )
+        else:
+            # Clone from remote and cache it for future use
+            logging.debug(f"No cache found, cloning from remote and caching")
+            repo: pygit2.Repository = pygit2.clone_repository(self.clone_url, workdir)
+
+            # Create a bare clone for caching
+            try:
+                logging.debug(f"Caching repository to {cached_repo_path}")
+                pygit2.clone_repository(workdir, cached_repo_path, bare=True)
+            except Exception as e:
+                logging.warning(f"Failed to cache repository: {e}")
+                # Non-fatal: caching is an optimization, not a requirement
 
         # Set gc.auto to 0 to avoid "too many open files" bug
         subprocess.run(
@@ -188,6 +216,23 @@ class Bug(object):
             diff_folder_path = Path(
                 get_project_root(), "data", self.pid, self.commit_hash
             )
+            
+            # Clean up test reports from the workdir before creating the diff image
+            # This reduces exported container size (fixes #8)
+            test_report_patterns = [
+                "**/surefire-reports",
+                "**/failsafe-reports",
+                "**/test-results",
+                "**/test-reports",
+                "**/target/surefire",
+                "**/target/failsafe",
+            ]
+            for pattern in test_report_patterns:
+                for report_dir in Path(workdir).glob(pattern):
+                    if report_dir.is_dir():
+                        shutil.rmtree(report_dir, ignore_errors=True)
+                        logging.debug(f"Removed test report directory: {report_dir}")
+            
             create_diff_image(
                 base_image, runner_image, self.__get_diff_path(diff_folder_path)
             )
@@ -334,7 +379,7 @@ class Bug(object):
                 },
                 f,
             )
-        print(f"Report written to {output_path}")
+        logging.info(f"Report written to {output_path}")
 
         for run in runs:
             logging.debug(run.stdout)

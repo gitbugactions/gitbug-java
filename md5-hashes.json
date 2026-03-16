@@ -1,0 +1,6 @@
+{
+  "_comment": "MD5 hashes for downloaded files. Run 'gitbug-java verify-hashes --update=True' after downloading to populate.",
+  "gitbug-java_offline_environments_1.tar.gz": null,
+  "gitbug-java_offline_environments_2.tar.gz": null,
+  "act-cache.zip": null
+}
