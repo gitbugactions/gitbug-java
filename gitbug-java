@@ -176,12 +176,22 @@ class GitBugJavaCli(object):
         workdir: str,
         act_cache_dir: Optional[str] = f"{get_project_root()}/act-cache",
         timeout: int = 0,
+        output: Optional[str] = None,
     ) -> bool:
         """
         Run the bug checked-out in workdir
+        
+        Args:
+            workdir: Directory containing the checked-out bug
+            act_cache_dir: Directory containing act cache (optional)
+            timeout: Timeout in seconds (0 for no timeout)
+            output: Output directory for test results (optional, defaults to {workdir}/.gitbug-java)
         """
-        output = Path(workdir, ".gitbug-java")
-        if not Path(output).exists():
+        if output is None:
+            output = Path(workdir, ".gitbug-java")
+        else:
+            output = Path(output)
+        if not output.exists():
             os.makedirs(output)
 
         # Read the bug info from the workdir
